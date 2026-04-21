@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using AspNetCoreRateLimit;
 using DaftAlerts.Api.Configuration;
@@ -189,26 +190,68 @@ public partial class Program
         }
     }
 
-    private static async Task InitializeDatabaseAsync(WebApplication app)
+    private static async Task InitializeDatabaseAsync(
+        WebApplication app,
+        CancellationToken ct = default
+    )
     {
-        var dbOptions = app.Services.GetRequiredService<IOptions<DatabaseOptions>>().Value;
-        var logger = app.Services.GetRequiredService<ILogger<Program>>();
-
         using var scope = app.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var sp = scope.ServiceProvider;
+
+        var dbOptions = sp.GetRequiredService<IOptions<DatabaseOptions>>().Value;
+        var logger = sp.GetRequiredService<ILogger<Program>>();
+        var db = sp.GetRequiredService<AppDbContext>();
 
         if (dbOptions.AutoMigrate)
         {
             logger.LogInformation("Applying pending EF Core migrations...");
-            await db.Database.MigrateAsync();
+
+            var pending = (await db.Database.GetPendingMigrationsAsync(ct)).ToList();
+            var applied = (await db.Database.GetAppliedMigrationsAsync(ct)).ToList();
+
+            if (pending.Count == 0 && applied.Count == 0)
+            {
+                logger.LogError(
+                    "No migrations found in assembly '{Assembly}'. Cannot create schema. "
+                        + "Run 'dotnet ef migrations add InitialCreate' against DaftAlerts.Infrastructure.",
+                    typeof(AppDbContext).Assembly.GetName().Name
+                );
+                throw new InvalidOperationException(
+                    "No EF Core migrations found. The database schema cannot be created."
+                );
+            }
+
+            if (pending.Count > 0)
+            {
+                logger.LogInformation(
+                    "Applying {Count} migration(s): {Migrations}",
+                    pending.Count,
+                    string.Join(", ", pending)
+                );
+                await db.Database.MigrateAsync(ct);
+            }
+            else
+            {
+                logger.LogInformation("Database schema is up to date.");
+            }
         }
         else
         {
-            logger.LogInformation(
-                "AutoMigrate=false; ensure migrations have been applied out-of-band."
-            );
+            logger.LogInformation("AutoMigrate=false; verifying schema exists...");
+
+            // Defensive: fail fast with a useful error rather than crash inside the seeder
+            var canConnect = await db.Database.CanConnectAsync(ct);
+            if (!canConnect)
+            {
+                throw new InvalidOperationException(
+                    "AutoMigrate is disabled and the database is unreachable. "
+                        + "Apply migrations out-of-band before starting the app."
+                );
+            }
         }
 
-        await DatabaseSeeder.SeedAsync(db, default);
+        logger.LogInformation("Seeding default data...");
+        await DatabaseSeeder.SeedAsync(db, ct);
+        logger.LogInformation("Database initialization complete.");
     }
 }
