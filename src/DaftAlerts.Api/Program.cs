@@ -159,7 +159,7 @@ public partial class Program
         await app.RunAsync();
     }
 
-    static void EnsureDatabaseDirectoryExists(WebApplication app)
+    private static void EnsureDatabaseDirectoryExists(WebApplication app)
     {
         var connectionString =
             app.Configuration.GetConnectionString("Default")
