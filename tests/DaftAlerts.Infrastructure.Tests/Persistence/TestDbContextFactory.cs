@@ -15,11 +15,10 @@ public static class TestDbContextFactory
         connection.CreateFunction(
             "berrank",
             (string? ber) => BerRank.Rank(ber),
-            isDeterministic: true);
+            isDeterministic: true
+        );
 
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseSqlite(connection)
-            .Options;
+        var options = new DbContextOptionsBuilder<AppDbContext>().UseSqlite(connection).Options;
 
         var ctx = new AppDbContext(options);
         ctx.Database.EnsureCreated();

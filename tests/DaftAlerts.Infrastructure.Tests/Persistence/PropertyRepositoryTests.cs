@@ -142,7 +142,6 @@ public sealed class PropertyRepositoryTests : IAsyncLifetime
         );
         r.Total.Should().Be(2);
         conn.Dispose();
-
     }
 
     [Fact]

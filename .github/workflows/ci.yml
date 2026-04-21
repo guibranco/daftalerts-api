@@ -63,14 +63,11 @@ jobs:
 
       - name: Test with coverage
         run: |
-          dotnet-coverage collect \
-            --output coverage.xml \
-            --output-format cobertura \
-            -- dotnet test DaftAlerts.sln \
-              --configuration Release \
-              --no-build \
-              --logger trx \
-              --results-directory TestResults
+          dotnet test DaftAlerts.sln \
+            --configuration Release --no-build \
+            --logger trx --results-directory TestResults \
+            --collect:"XPlat Code Coverage" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
 
       - name: Upload test results
         if: always()
