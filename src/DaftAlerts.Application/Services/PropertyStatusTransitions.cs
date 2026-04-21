@@ -12,7 +12,8 @@ public static class PropertyStatusTransitions
     /// </summary>
     public static bool Transition(Property property, PropertyStatus newStatus, IClock clock)
     {
-        if (property.Status == newStatus) return false;
+        if (property.Status == newStatus)
+            return false;
 
         property.Status = newStatus;
         var now = clock.UtcNow;
@@ -38,11 +39,12 @@ public static class PropertyStatusTransitions
         return true;
     }
 
-    public static PropertyStatus FromBulkAction(string action) => action.ToLowerInvariant() switch
-    {
-        "approve" => PropertyStatus.Approved,
-        "recycle" => PropertyStatus.Recycled,
-        "restore" => PropertyStatus.Inbox,
-        _ => throw new ArgumentException($"Unknown bulk action '{action}'.", nameof(action))
-    };
+    public static PropertyStatus FromBulkAction(string action) =>
+        action.ToLowerInvariant() switch
+        {
+            "approve" => PropertyStatus.Approved,
+            "recycle" => PropertyStatus.Recycled,
+            "restore" => PropertyStatus.Inbox,
+            _ => throw new ArgumentException($"Unknown bulk action '{action}'.", nameof(action)),
+        };
 }

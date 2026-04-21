@@ -23,12 +23,14 @@ public sealed class EmailIngestEndToEndTests : IDisposable
         _dbPath = Path.Combine(Path.GetTempPath(), $"daftalerts-test-{Guid.NewGuid():N}.db");
         _samplesDir = Path.Combine(
             Path.GetDirectoryName(typeof(EmailIngestEndToEndTests).Assembly.Location)!,
-            "TestData");
+            "TestData"
+        );
     }
 
     public void Dispose()
     {
-        if (File.Exists(_dbPath)) File.Delete(_dbPath);
+        if (File.Exists(_dbPath))
+            File.Delete(_dbPath);
     }
 
     private string FindIngestBinary()
@@ -44,14 +46,19 @@ public sealed class EmailIngestEndToEndTests : IDisposable
         return ingestProject;
     }
 
-    [Fact(Skip = "Requires the EmailIngest project to be buildable in the test environment; run manually with `dotnet test --filter EndToEnd`.")]
+    [Fact(
+        Skip = "Requires the EmailIngest project to be buildable in the test environment; run manually with `dotnet test --filter EndToEnd`."
+    )]
     public async Task Pipes_sample_eml_and_creates_property()
     {
         var ingestProjectDir = FindIngestBinary();
         var samplePath = Path.Combine(_samplesDir, "sample-daft-herbert-lane.eml");
 
         if (!File.Exists(samplePath))
-            throw new FileNotFoundException("Sample .eml is missing; ensure TestData is copied to test output.", samplePath);
+            throw new FileNotFoundException(
+                "Sample .eml is missing; ensure TestData is copied to test output.",
+                samplePath
+            );
 
         var psi = new ProcessStartInfo
         {
@@ -60,7 +67,7 @@ public sealed class EmailIngestEndToEndTests : IDisposable
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
-            UseShellExecute = false
+            UseShellExecute = false,
         };
         psi.ArgumentList.Add("run");
         psi.ArgumentList.Add("--project");
@@ -72,7 +79,8 @@ public sealed class EmailIngestEndToEndTests : IDisposable
             $"Data Source={_dbPath};Cache=Shared;Foreign Keys=true";
         psi.EnvironmentVariables["DaftAlerts__Database__AutoMigrate"] = "true";
 
-        using var process = Process.Start(psi)
+        using var process =
+            Process.Start(psi)
             ?? throw new InvalidOperationException("Failed to start dotnet process.");
 
         await using (var stdin = process.StandardInput.BaseStream)

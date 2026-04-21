@@ -22,4 +22,5 @@ public sealed record PropertyDto(
     DateTime ReceivedAt,
     DateTime? ApprovedAt,
     DateTime? RecycledAt,
-    string? Notes);
+    string? Notes
+);

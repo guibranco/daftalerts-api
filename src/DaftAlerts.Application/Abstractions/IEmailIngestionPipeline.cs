@@ -9,10 +9,16 @@ public enum IngestionOutcome
     Created,
     DuplicateIgnored,
     ParseFailed,
-    NotADaftEmail
+    NotADaftEmail,
 }
 
-public sealed record IngestionResult(IngestionOutcome Outcome, string? MessageId, string? Error, System.Guid? PropertyId, System.Guid? RawEmailId);
+public sealed record IngestionResult(
+    IngestionOutcome Outcome,
+    string? MessageId,
+    string? Error,
+    System.Guid? PropertyId,
+    System.Guid? RawEmailId
+);
 
 public interface IEmailIngestionPipeline
 {

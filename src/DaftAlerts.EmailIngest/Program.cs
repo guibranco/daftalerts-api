@@ -26,26 +26,35 @@ public static class Program
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
 
         var host = Host.CreateDefaultBuilder(args)
-            .ConfigureAppConfiguration((ctx, cfg) =>
-            {
-                cfg.AddJsonFile("appsettings.json", optional: true, reloadOnChange: false);
-                cfg.AddJsonFile($"appsettings.{ctx.HostingEnvironment.EnvironmentName}.json",
-                    optional: true, reloadOnChange: false);
-                cfg.AddEnvironmentVariables(prefix: "DaftAlerts__");
-                cfg.AddCommandLine(args);
-            })
-            .UseSerilog((ctx, _, config) =>
-            {
-                config
-                    .ReadFrom.Configuration(ctx.Configuration)
-                    .Enrich.FromLogContext()
-                    .Enrich.WithMachineName()
-                    .Enrich.WithThreadId();
-            })
-            .ConfigureServices((ctx, services) =>
-            {
-                services.AddDaftAlertsInfrastructure(ctx.Configuration);
-            })
+            .ConfigureAppConfiguration(
+                (ctx, cfg) =>
+                {
+                    cfg.AddJsonFile("appsettings.json", optional: true, reloadOnChange: false);
+                    cfg.AddJsonFile(
+                        $"appsettings.{ctx.HostingEnvironment.EnvironmentName}.json",
+                        optional: true,
+                        reloadOnChange: false
+                    );
+                    cfg.AddEnvironmentVariables(prefix: "DaftAlerts__");
+                    cfg.AddCommandLine(args);
+                }
+            )
+            .UseSerilog(
+                (ctx, _, config) =>
+                {
+                    config
+                        .ReadFrom.Configuration(ctx.Configuration)
+                        .Enrich.FromLogContext()
+                        .Enrich.WithMachineName()
+                        .Enrich.WithThreadId();
+                }
+            )
+            .ConfigureServices(
+                (ctx, services) =>
+                {
+                    services.AddDaftAlertsInfrastructure(ctx.Configuration);
+                }
+            )
             .Build();
 
         var logger = host.Services.GetRequiredService<ILogger<IEmailIngestionPipeline>>();
@@ -73,7 +82,11 @@ public static class Program
             var result = await pipeline.IngestAsync(buffer, cts.Token);
             logger.LogInformation(
                 "Ingest finished: outcome={Outcome}, messageId={MessageId}, propertyId={PropertyId}, rawEmailId={RawEmailId}",
-                result.Outcome, result.MessageId, result.PropertyId, result.RawEmailId);
+                result.Outcome,
+                result.MessageId,
+                result.PropertyId,
+                result.RawEmailId
+            );
 
             return 0;
         }

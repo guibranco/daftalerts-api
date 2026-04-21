@@ -10,18 +10,26 @@ namespace DaftAlerts.Infrastructure.Tests.Parsing;
 
 public sealed class DaftEmailParserTests
 {
-    private static IDaftEmailParser CreateParser() => new DaftEmailParser(NullLogger<DaftEmailParser>.Instance);
+    private static IDaftEmailParser CreateParser() =>
+        new DaftEmailParser(NullLogger<DaftEmailParser>.Instance);
 
     [Fact]
     public async Task Parses_Herbert_Lane_sample_completely()
     {
         var msg = await MimeHelper.LoadAsync("sample-daft-herbert-lane.eml");
-        var parsed = CreateParser().Parse(msg.HtmlBody ?? "", msg.Subject, msg.Date.UtcDateTime, msg.MessageId);
+        var parsed = CreateParser()
+            .Parse(msg.HtmlBody ?? "", msg.Subject, msg.Date.UtcDateTime, msg.MessageId);
 
         parsed.Should().NotBeNull();
         parsed!.DaftId.Should().Be("6546017");
-        parsed.DaftUrl.Should().Be("https://www.daft.ie/for-rent/house-herbert-lane-mews-dublin-2/6546017");
-        parsed.Address.Should().Contain("Herbert Lane Mews").And.Contain("Dublin 2").And.Contain("D02KC86");
+        parsed
+            .DaftUrl.Should()
+            .Be("https://www.daft.ie/for-rent/house-herbert-lane-mews-dublin-2/6546017");
+        parsed
+            .Address.Should()
+            .Contain("Herbert Lane Mews")
+            .And.Contain("Dublin 2")
+            .And.Contain("D02KC86");
         parsed.Eircode.Should().Be("D02KC86");
         parsed.RoutingKey.Should().Be("D02");
         parsed.PriceMonthly.Should().Be(2850m);
@@ -36,7 +44,8 @@ public sealed class DaftEmailParserTests
     public async Task Parses_apartment()
     {
         var msg = await MimeHelper.LoadAsync("sample-apartment.eml");
-        var parsed = CreateParser().Parse(msg.HtmlBody ?? "", msg.Subject, msg.Date.UtcDateTime, msg.MessageId);
+        var parsed = CreateParser()
+            .Parse(msg.HtmlBody ?? "", msg.Subject, msg.Date.UtcDateTime, msg.MessageId);
 
         parsed.Should().NotBeNull();
         parsed!.DaftId.Should().Be("7891234");
@@ -53,7 +62,8 @@ public sealed class DaftEmailParserTests
     public async Task Parses_studio()
     {
         var msg = await MimeHelper.LoadAsync("sample-studio.eml");
-        var parsed = CreateParser().Parse(msg.HtmlBody ?? "", msg.Subject, msg.Date.UtcDateTime, msg.MessageId);
+        var parsed = CreateParser()
+            .Parse(msg.HtmlBody ?? "", msg.Subject, msg.Date.UtcDateTime, msg.MessageId);
 
         parsed.Should().NotBeNull();
         parsed!.PropertyType.Should().Be("Studio");
@@ -68,7 +78,8 @@ public sealed class DaftEmailParserTests
     public async Task Parses_shared_with_no_BER()
     {
         var msg = await MimeHelper.LoadAsync("sample-shared-no-ber.eml");
-        var parsed = CreateParser().Parse(msg.HtmlBody ?? "", msg.Subject, msg.Date.UtcDateTime, msg.MessageId);
+        var parsed = CreateParser()
+            .Parse(msg.HtmlBody ?? "", msg.Subject, msg.Date.UtcDateTime, msg.MessageId);
 
         parsed.Should().NotBeNull();
         parsed!.PropertyType.Should().Be("Shared");
@@ -81,7 +92,8 @@ public sealed class DaftEmailParserTests
     public async Task Unwraps_Outlook_SafeLinks_and_prefers_originalsrc()
     {
         var msg = await MimeHelper.LoadAsync("sample-outlook-safelinks.eml");
-        var parsed = CreateParser().Parse(msg.HtmlBody ?? "", msg.Subject, msg.Date.UtcDateTime, msg.MessageId);
+        var parsed = CreateParser()
+            .Parse(msg.HtmlBody ?? "", msg.Subject, msg.Date.UtcDateTime, msg.MessageId);
 
         parsed.Should().NotBeNull();
         parsed!.DaftId.Should().Be("4442222");
@@ -94,7 +106,8 @@ public sealed class DaftEmailParserTests
     public async Task Degrades_gracefully_when_eircode_is_missing()
     {
         var msg = await MimeHelper.LoadAsync("sample-no-eircode.eml");
-        var parsed = CreateParser().Parse(msg.HtmlBody ?? "", msg.Subject, msg.Date.UtcDateTime, msg.MessageId);
+        var parsed = CreateParser()
+            .Parse(msg.HtmlBody ?? "", msg.Subject, msg.Date.UtcDateTime, msg.MessageId);
 
         parsed.Should().NotBeNull();
         parsed!.DaftId.Should().Be("9998888");
@@ -125,12 +138,12 @@ public sealed class DaftEmailParserTests
     }
 
     [Theory]
-    [InlineData("https://eur01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fwww.daft.ie%2Ffoo&amp;data=x",
-                "https://www.daft.ie/foo")]
-    [InlineData("https://www.daft.ie/already-unwrapped",
-                "https://www.daft.ie/already-unwrapped")]
-    [InlineData("not-a-url-at-all",
-                "not-a-url-at-all")]
+    [InlineData(
+        "https://eur01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fwww.daft.ie%2Ffoo&amp;data=x",
+        "https://www.daft.ie/foo"
+    )]
+    [InlineData("https://www.daft.ie/already-unwrapped", "https://www.daft.ie/already-unwrapped")]
+    [InlineData("not-a-url-at-all", "not-a-url-at-all")]
     public void UnwrapSafeLink_handles_various_inputs(string input, string expected)
     {
         DaftEmailParser.UnwrapSafeLink(input).Should().Be(expected);

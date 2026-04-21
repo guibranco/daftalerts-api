@@ -13,6 +13,7 @@ namespace DaftAlerts.Infrastructure.Persistence.Repositories;
 public sealed class RawEmailRepository : IRawEmailRepository
 {
     private readonly AppDbContext _db;
+
     public RawEmailRepository(AppDbContext db) => _db = db;
 
     public Task<bool> ExistsByMessageIdAsync(string messageId, CancellationToken ct) =>
@@ -24,12 +25,18 @@ public sealed class RawEmailRepository : IRawEmailRepository
     public Task<RawEmail?> GetByIdAsync(Guid id, CancellationToken ct) =>
         _db.RawEmails.FirstOrDefaultAsync(r => r.Id == id, ct);
 
-    public async Task<IReadOnlyList<RawEmail>> GetFailedForRetryAsync(TimeSpan minimumAge, int batchSize, CancellationToken ct)
+    public async Task<IReadOnlyList<RawEmail>> GetFailedForRetryAsync(
+        TimeSpan minimumAge,
+        int batchSize,
+        CancellationToken ct
+    )
     {
         var cutoff = DateTime.UtcNow - minimumAge;
-        return await _db.RawEmails
-            .Where(r => r.ParseStatus == ParseStatus.Failed &&
-                        (r.LastAttemptAt == null || r.LastAttemptAt < cutoff))
+        return await _db
+            .RawEmails.Where(r =>
+                r.ParseStatus == ParseStatus.Failed
+                && (r.LastAttemptAt == null || r.LastAttemptAt < cutoff)
+            )
             .OrderBy(r => r.ReceivedAt)
             .Take(batchSize)
             .ToListAsync(ct);
@@ -44,10 +51,14 @@ public sealed class RawEmailRepository : IRawEmailRepository
 public sealed class FilterPresetRepository : IFilterPresetRepository
 {
     private readonly AppDbContext _db;
+
     public FilterPresetRepository(AppDbContext db) => _db = db;
 
     public async Task<IReadOnlyList<FilterPreset>> GetAllAsync(CancellationToken ct) =>
-        await _db.FilterPresets.OrderByDescending(f => f.IsDefault).ThenBy(f => f.Name).ToListAsync(ct);
+        await _db
+            .FilterPresets.OrderByDescending(f => f.IsDefault)
+            .ThenBy(f => f.Name)
+            .ToListAsync(ct);
 
     public Task<FilterPreset?> GetByIdAsync(Guid id, CancellationToken ct) =>
         _db.FilterPresets.FirstOrDefaultAsync(f => f.Id == id, ct);
@@ -58,7 +69,8 @@ public sealed class FilterPresetRepository : IFilterPresetRepository
     public async Task<bool> RemoveAsync(Guid id, CancellationToken ct)
     {
         var existing = await _db.FilterPresets.FirstOrDefaultAsync(f => f.Id == id, ct);
-        if (existing is null) return false;
+        if (existing is null)
+            return false;
         _db.FilterPresets.Remove(existing);
         return true;
     }
@@ -69,6 +81,8 @@ public sealed class FilterPresetRepository : IFilterPresetRepository
 public sealed class EfUnitOfWork : IUnitOfWork
 {
     private readonly AppDbContext _db;
+
     public EfUnitOfWork(AppDbContext db) => _db = db;
+
     public Task<int> SaveChangesAsync(CancellationToken ct) => _db.SaveChangesAsync(ct);
 }

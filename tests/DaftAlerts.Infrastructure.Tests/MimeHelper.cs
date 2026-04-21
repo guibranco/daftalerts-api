@@ -6,8 +6,10 @@ namespace DaftAlerts.Infrastructure.Tests;
 
 internal static class MimeHelper
 {
-    private static readonly string TestDataRoot =
-        Path.Combine(Path.GetDirectoryName(typeof(MimeHelper).Assembly.Location)!, "TestData");
+    private static readonly string TestDataRoot = Path.Combine(
+        Path.GetDirectoryName(typeof(MimeHelper).Assembly.Location)!,
+        "TestData"
+    );
 
     public static async Task<MimeMessage> LoadAsync(string filename)
     {

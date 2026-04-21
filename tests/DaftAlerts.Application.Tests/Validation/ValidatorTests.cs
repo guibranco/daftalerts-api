@@ -8,13 +8,23 @@ namespace DaftAlerts.Application.Tests.Validation;
 
 public sealed class ValidatorTests
 {
-    private static PropertyQuery BaseQuery(params (string name, object? value)[] overrides) => new(
-        Status: PropertyStatus.Inbox, Page: 1, PageSize: 24,
-        Search: null, RoutingKeys: null,
-        MinBeds: null, MaxBeds: null, MinBaths: null,
-        MinPrice: null, MaxPrice: null,
-        PropertyTypes: null, BerMin: null,
-        SortBy: PropertySortField.ReceivedAt, SortDir: SortDirection.Desc);
+    private static PropertyQuery BaseQuery(params (string name, object? value)[] overrides) =>
+        new(
+            Status: PropertyStatus.Inbox,
+            Page: 1,
+            PageSize: 24,
+            Search: null,
+            RoutingKeys: null,
+            MinBeds: null,
+            MaxBeds: null,
+            MinBaths: null,
+            MinPrice: null,
+            MaxPrice: null,
+            PropertyTypes: null,
+            BerMin: null,
+            SortBy: PropertySortField.ReceivedAt,
+            SortDir: SortDirection.Desc
+        );
 
     [Fact]
     public void PropertyQuery_valid_passes()
@@ -46,20 +56,27 @@ public sealed class ValidatorTests
     [Fact]
     public void UpdatePropertyDto_invalid_status_fails()
     {
-        new UpdatePropertyValidator().Validate(new UpdatePropertyDto("archived", null)).IsValid.Should().BeFalse();
+        new UpdatePropertyValidator()
+            .Validate(new UpdatePropertyDto("archived", null))
+            .IsValid.Should()
+            .BeFalse();
     }
 
     [Fact]
     public void BulkAction_empty_ids_fails()
     {
-        new BulkActionValidator().Validate(new BulkActionDto(System.Array.Empty<System.Guid>(), "approve"))
-            .IsValid.Should().BeFalse();
+        new BulkActionValidator()
+            .Validate(new BulkActionDto(System.Array.Empty<System.Guid>(), "approve"))
+            .IsValid.Should()
+            .BeFalse();
     }
 
     [Fact]
     public void BulkAction_bad_action_fails()
     {
-        new BulkActionValidator().Validate(new BulkActionDto(new[] { System.Guid.NewGuid() }, "delete"))
-            .IsValid.Should().BeFalse();
+        new BulkActionValidator()
+            .Validate(new BulkActionDto(new[] { System.Guid.NewGuid() }, "delete"))
+            .IsValid.Should()
+            .BeFalse();
     }
 }

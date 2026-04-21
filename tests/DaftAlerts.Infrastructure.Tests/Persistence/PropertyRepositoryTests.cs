@@ -25,9 +25,7 @@ public sealed class PropertyRepositoryTests : IAsyncLifetime
         _conn = new SqliteConnection("Data Source=:memory:");
         await _conn.OpenAsync();
 
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseSqlite(_conn)
-            .Options;
+        var options = new DbContextOptionsBuilder<AppDbContext>().UseSqlite(_conn).Options;
 
         _db = new AppDbContext(options);
         await _db.Database.EnsureCreatedAsync();
@@ -50,27 +48,37 @@ public sealed class PropertyRepositoryTests : IAsyncLifetime
             Make("2", "D02", PropertyStatus.Inbox, 3500, 3, "C3", "House", now.AddDays(-2)),
             Make("3", "D04", PropertyStatus.Inbox, 1500, 1, "G", "Studio", now.AddDays(-3)),
             Make("4", "D08", PropertyStatus.Approved, 1800, 2, null, "Apartment", now.AddDays(-4)),
-            Make("5", "D06", PropertyStatus.Recycled, 2500, 2, "B2", "House", now.AddDays(-5)));
+            Make("5", "D06", PropertyStatus.Recycled, 2500, 2, "B2", "House", now.AddDays(-5))
+        );
         await _db.SaveChangesAsync();
     }
 
-    private static Property Make(string id, string rk, PropertyStatus status, decimal price, int beds,
-        string? ber, string type, DateTime receivedAt) => new()
-    {
-        Id = Guid.NewGuid(),
-        DaftId = id,
-        DaftUrl = $"https://www.daft.ie/for-rent/x/{id}",
-        Address = $"Address {id}, {rk}",
-        RoutingKey = rk,
-        PriceMonthly = price,
-        Beds = beds,
-        Baths = 1,
-        PropertyType = type,
-        BerRating = ber,
-        Status = status,
-        ReceivedAt = receivedAt,
-        RawSubject = $"subj-{id}"
-    };
+    private static Property Make(
+        string id,
+        string rk,
+        PropertyStatus status,
+        decimal price,
+        int beds,
+        string? ber,
+        string type,
+        DateTime receivedAt
+    ) =>
+        new()
+        {
+            Id = Guid.NewGuid(),
+            DaftId = id,
+            DaftUrl = $"https://www.daft.ie/for-rent/x/{id}",
+            Address = $"Address {id}, {rk}",
+            RoutingKey = rk,
+            PriceMonthly = price,
+            Beds = beds,
+            Baths = 1,
+            PropertyType = type,
+            BerRating = ber,
+            Status = status,
+            ReceivedAt = receivedAt,
+            RawSubject = $"subj-{id}",
+        };
 
     private static PropertyQuery Query(PropertyStatus status, Action<QueryBuilder>? mutate = null)
     {
@@ -89,23 +97,37 @@ public sealed class PropertyRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task Filters_by_routing_keys()
     {
-        var r = await _repo.QueryAsync(Query(PropertyStatus.Inbox, q => q.RoutingKeys = new[] { "D02" }),
-            CancellationToken.None);
+        var r = await _repo.QueryAsync(
+            Query(PropertyStatus.Inbox, q => q.RoutingKeys = new[] { "D02" }),
+            CancellationToken.None
+        );
         r.Total.Should().Be(2);
     }
 
     [Fact]
     public async Task Filters_by_min_beds()
     {
-        var r = await _repo.QueryAsync(Query(PropertyStatus.Inbox, q => q.MinBeds = 2), CancellationToken.None);
+        var r = await _repo.QueryAsync(
+            Query(PropertyStatus.Inbox, q => q.MinBeds = 2),
+            CancellationToken.None
+        );
         r.Total.Should().Be(1);
     }
 
     [Fact]
     public async Task Filters_by_price_range()
     {
-        var r = await _repo.QueryAsync(Query(PropertyStatus.Inbox, q => { q.MinPrice = 1800m; q.MaxPrice = 3000m; }),
-            CancellationToken.None);
+        var r = await _repo.QueryAsync(
+            Query(
+                PropertyStatus.Inbox,
+                q =>
+                {
+                    q.MinPrice = 1800m;
+                    q.MaxPrice = 3000m;
+                }
+            ),
+            CancellationToken.None
+        );
         r.Total.Should().Be(1);
     }
 
@@ -113,23 +135,37 @@ public sealed class PropertyRepositoryTests : IAsyncLifetime
     public async Task Filters_by_berMin_using_scalar_function()
     {
         // berMin=C3 means C3 or better (rank <= 9). Inbox has A1(1), C3(9), G(15). Expect A1 and C3.
-        var r = await _repo.QueryAsync(Query(PropertyStatus.Inbox, q => q.BerMin = "C3"), CancellationToken.None);
+        var r = await _repo.QueryAsync(
+            Query(PropertyStatus.Inbox, q => q.BerMin = "C3"),
+            CancellationToken.None
+        );
         r.Total.Should().Be(2);
     }
 
     [Fact]
     public async Task Filters_by_search_on_address()
     {
-        var r = await _repo.QueryAsync(Query(PropertyStatus.Inbox, q => q.Search = "D04"), CancellationToken.None);
+        var r = await _repo.QueryAsync(
+            Query(PropertyStatus.Inbox, q => q.Search = "D04"),
+            CancellationToken.None
+        );
         r.Total.Should().Be(1);
     }
 
     [Fact]
     public async Task Sorts_by_price_asc()
     {
-        var r = await _repo.QueryAsync(Query(PropertyStatus.Inbox, q => {
-            q.SortBy = PropertySortField.Price; q.SortDir = SortDirection.Asc;
-        }), CancellationToken.None);
+        var r = await _repo.QueryAsync(
+            Query(
+                PropertyStatus.Inbox,
+                q =>
+                {
+                    q.SortBy = PropertySortField.Price;
+                    q.SortDir = SortDirection.Asc;
+                }
+            ),
+            CancellationToken.None
+        );
         r.Items[0].PriceMonthly.Should().Be(1500m);
         r.Items[^1].PriceMonthly.Should().Be(3500m);
     }
@@ -137,8 +173,17 @@ public sealed class PropertyRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task Pages_results()
     {
-        var r = await _repo.QueryAsync(Query(PropertyStatus.Inbox, q => { q.Page = 1; q.PageSize = 2; }),
-            CancellationToken.None);
+        var r = await _repo.QueryAsync(
+            Query(
+                PropertyStatus.Inbox,
+                q =>
+                {
+                    q.Page = 1;
+                    q.PageSize = 2;
+                }
+            ),
+            CancellationToken.None
+        );
         r.Items.Should().HaveCount(2);
         r.Total.Should().Be(3);
         r.Page.Should().Be(1);
@@ -149,8 +194,12 @@ public sealed class PropertyRepositoryTests : IAsyncLifetime
     public async Task GetStats_computes_avg_and_median()
     {
         var more = DateTime.UtcNow.AddDays(-10);
-        _db.Properties.Add(Make("6", "D02", PropertyStatus.Approved, 2000, 2, "B1", "Apartment", more));
-        _db.Properties.Add(Make("7", "D02", PropertyStatus.Approved, 2200, 2, "B1", "Apartment", more));
+        _db.Properties.Add(
+            Make("6", "D02", PropertyStatus.Approved, 2000, 2, "B1", "Apartment", more)
+        );
+        _db.Properties.Add(
+            Make("7", "D02", PropertyStatus.Approved, 2200, 2, "B1", "Apartment", more)
+        );
         await _db.SaveChangesAsync();
 
         var stats = await _repo.GetStatsAsync(CancellationToken.None);
@@ -177,11 +226,27 @@ public sealed class PropertyRepositoryTests : IAsyncLifetime
         public PropertySortField SortBy { get; set; } = PropertySortField.ReceivedAt;
         public SortDirection SortDir { get; set; } = SortDirection.Desc;
 
-        public QueryBuilder(PropertyStatus status) { Status = status; }
+        public QueryBuilder(PropertyStatus status)
+        {
+            Status = status;
+        }
 
-        public PropertyQuery Build() => new(
-            Status, Page, PageSize, Search, RoutingKeys,
-            MinBeds, MaxBeds, MinBaths, MinPrice, MaxPrice,
-            PropertyTypes, BerMin, SortBy, SortDir);
+        public PropertyQuery Build() =>
+            new(
+                Status,
+                Page,
+                PageSize,
+                Search,
+                RoutingKeys,
+                MinBeds,
+                MaxBeds,
+                MinBaths,
+                MinPrice,
+                MaxPrice,
+                PropertyTypes,
+                BerMin,
+                SortBy,
+                SortDir
+            );
     }
 }

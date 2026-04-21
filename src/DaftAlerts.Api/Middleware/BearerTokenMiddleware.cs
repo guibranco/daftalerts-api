@@ -17,7 +17,11 @@ public sealed class BearerTokenMiddleware
     private readonly AuthOptions _options;
     private readonly ILogger<BearerTokenMiddleware> _logger;
 
-    public BearerTokenMiddleware(RequestDelegate next, IOptions<AuthOptions> options, ILogger<BearerTokenMiddleware> logger)
+    public BearerTokenMiddleware(
+        RequestDelegate next,
+        IOptions<AuthOptions> options,
+        ILogger<BearerTokenMiddleware> logger
+    )
     {
         _next = next;
         _options = options.Value;
@@ -50,7 +54,10 @@ public sealed class BearerTokenMiddleware
         const string prefix = "Bearer ";
         if (!value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
         {
-            await WriteUnauthorizedAsync(context, "Authorization header must use the Bearer scheme.");
+            await WriteUnauthorizedAsync(
+                context,
+                "Authorization header must use the Bearer scheme."
+            );
             return;
         }
 
@@ -66,9 +73,11 @@ public sealed class BearerTokenMiddleware
 
     private static bool CryptographicEquals(string a, string b)
     {
-        if (a.Length != b.Length) return false;
+        if (a.Length != b.Length)
+            return false;
         var diff = 0;
-        for (var i = 0; i < a.Length; i++) diff |= a[i] ^ b[i];
+        for (var i = 0; i < a.Length; i++)
+            diff |= a[i] ^ b[i];
         return diff == 0;
     }
 
@@ -76,12 +85,14 @@ public sealed class BearerTokenMiddleware
     {
         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
         context.Response.ContentType = "application/problem+json";
-        return context.Response.WriteAsJsonAsync(new
-        {
-            type = "https://tools.ietf.org/html/rfc7235#section-3.1",
-            title = "Unauthorized",
-            status = 401,
-            detail
-        });
+        return context.Response.WriteAsJsonAsync(
+            new
+            {
+                type = "https://tools.ietf.org/html/rfc7235#section-3.1",
+                title = "Unauthorized",
+                status = 401,
+                detail,
+            }
+        );
     }
 }

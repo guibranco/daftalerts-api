@@ -44,29 +44,39 @@ public sealed class DaftAlertsApiFactory : WebApplicationFactory<Program>
     {
         builder.UseEnvironment("Testing");
 
-        builder.ConfigureAppConfiguration((_, config) =>
-        {
-            config.AddInMemoryCollection(new Dictionary<string, string?>
+        builder.ConfigureAppConfiguration(
+            (_, config) =>
             {
-                ["Auth:ApiToken"] = TestToken,
-                ["Cors:AllowedOrigins:0"] = "http://localhost:5173",
-                ["Database:AutoMigrate"] = "false",
-                ["Geocoding:GoogleApiKey"] = "",
-                ["IpRateLimiting:EnableEndpointRateLimiting"] = "false",
-            });
-        });
+                config.AddInMemoryCollection(
+                    new Dictionary<string, string?>
+                    {
+                        ["Auth:ApiToken"] = TestToken,
+                        ["Cors:AllowedOrigins:0"] = "http://localhost:5173",
+                        ["Database:AutoMigrate"] = "false",
+                        ["Geocoding:GoogleApiKey"] = "",
+                        ["IpRateLimiting:EnableEndpointRateLimiting"] = "false",
+                    }
+                );
+            }
+        );
 
         builder.ConfigureServices(services =>
         {
             // Remove the production DbContext registration and bind it to our shared in-memory SQLite connection.
-            var descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
-            if (descriptor is not null) services.Remove(descriptor);
+            var descriptor = services.FirstOrDefault(d =>
+                d.ServiceType == typeof(DbContextOptions<AppDbContext>)
+            );
+            if (descriptor is not null)
+                services.Remove(descriptor);
 
             services.AddDbContext<AppDbContext>(o => o.UseSqlite(_conn));
 
             // Replace geocoding with a noop — we don't want network calls in tests.
-            var geoDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(IGeocodingService));
-            if (geoDescriptor is not null) services.Remove(geoDescriptor);
+            var geoDescriptor = services.FirstOrDefault(d =>
+                d.ServiceType == typeof(IGeocodingService)
+            );
+            if (geoDescriptor is not null)
+                services.Remove(geoDescriptor);
             services.AddScoped<IGeocodingService, NoopGeocodingService>();
         });
     }
@@ -74,7 +84,10 @@ public sealed class DaftAlertsApiFactory : WebApplicationFactory<Program>
     public HttpClient CreateAuthedClient()
     {
         var client = CreateClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TestToken);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            TestToken
+        );
         return client;
     }
 
@@ -87,7 +100,8 @@ public sealed class DaftAlertsApiFactory : WebApplicationFactory<Program>
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        if (disposing) _conn.Dispose();
+        if (disposing)
+            _conn.Dispose();
     }
 }
 

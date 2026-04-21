@@ -32,20 +32,24 @@ public partial class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // --- Serilog -------------------------------------------------------
-        builder.Host.UseSerilog((ctx, services, config) =>
-        {
-            config
-                .ReadFrom.Configuration(ctx.Configuration)
-                .ReadFrom.Services(services)
-                .Enrich.FromLogContext()
-                .Enrich.WithMachineName()
-                .Enrich.WithThreadId();
-        });
+        builder.Host.UseSerilog(
+            (ctx, services, config) =>
+            {
+                config
+                    .ReadFrom.Configuration(ctx.Configuration)
+                    .ReadFrom.Services(services)
+                    .Enrich.FromLogContext()
+                    .Enrich.WithMachineName()
+                    .Enrich.WithThreadId();
+            }
+        );
 
         // --- Options -------------------------------------------------------
-        builder.Services.AddOptions<AuthOptions>()
+        builder
+            .Services.AddOptions<AuthOptions>()
             .Bind(builder.Configuration.GetSection(AuthOptions.SectionName));
-        builder.Services.AddOptions<CorsOptions>()
+        builder
+            .Services.AddOptions<CorsOptions>()
             .Bind(builder.Configuration.GetSection(CorsOptions.SectionName));
 
         // --- Infrastructure (DbContext, repos, parser, pipeline, geocoding)
@@ -55,16 +59,21 @@ public partial class Program
         builder.Services.AddValidatorsFromAssemblyContaining<PropertyQueryValidator>();
 
         // --- CORS ----------------------------------------------------------
-        builder.Services.AddCors(o => o.AddDefaultPolicy(policy =>
-        {
-            var origins = builder.Configuration.GetSection(CorsOptions.SectionName + ":AllowedOrigins")
-                .Get<string[]>() ?? Array.Empty<string>();
-            if (origins.Length == 0)
-                policy.SetIsOriginAllowed(_ => false);
-            else
-                policy.WithOrigins(origins);
-            policy.AllowAnyHeader().AllowAnyMethod();
-        }));
+        builder.Services.AddCors(o =>
+            o.AddDefaultPolicy(policy =>
+            {
+                var origins =
+                    builder
+                        .Configuration.GetSection(CorsOptions.SectionName + ":AllowedOrigins")
+                        .Get<string[]>()
+                    ?? Array.Empty<string>();
+                if (origins.Length == 0)
+                    policy.SetIsOriginAllowed(_ => false);
+                else
+                    policy.WithOrigins(origins);
+                policy.AllowAnyHeader().AllowAnyMethod();
+            })
+        );
 
         // --- ProblemDetails + exception handler ---------------------------
         builder.Services.AddProblemDetails();
@@ -74,7 +83,8 @@ public partial class Program
         builder.Services.AddApiRateLimiting(builder.Configuration);
 
         // --- Health checks -------------------------------------------------
-        builder.Services.AddHealthChecks()
+        builder
+            .Services.AddHealthChecks()
             .AddDbContextCheck<AppDbContext>("sqlite")
             .AddCheck<GeocodingWorkerHealthCheck>("geocoding-worker", tags: new[] { "ready" });
 
@@ -95,16 +105,18 @@ public partial class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddOpenApi(options =>
         {
-            options.AddDocumentTransformer((document, _, _) =>
-            {
-                document.Info = new()
+            options.AddDocumentTransformer(
+                (document, _, _) =>
                 {
-                    Title = "DaftAlerts API",
-                    Version = "v1",
-                    Description = "Personal Daft.ie property aggregator API"
-                };
-                return Task.CompletedTask;
-            });
+                    document.Info = new()
+                    {
+                        Title = "DaftAlerts API",
+                        Version = "v1",
+                        Description = "Personal Daft.ie property aggregator API",
+                    };
+                    return Task.CompletedTask;
+                }
+            );
         });
 
         var app = builder.Build();
@@ -131,10 +143,13 @@ public partial class Program
         app.MapPresetsEndpoints();
 
         app.MapHealthChecks("/health");
-        app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
-        {
-            Predicate = reg => reg.Tags.Contains("ready")
-        });
+        app.MapHealthChecks(
+            "/health/ready",
+            new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+            {
+                Predicate = reg => reg.Tags.Contains("ready"),
+            }
+        );
 
         // --- DB: migrate + seed -------------------------------------------
         EnsureDatabaseDirectoryExists(app);
@@ -145,8 +160,9 @@ public partial class Program
 
     private static void EnsureDatabaseDirectoryExists(WebApplication app)
     {
-        var connectionString = app.Configuration.GetConnectionString("Default")
-                               ?? throw new InvalidOperationException("ConnectionStrings:Default not configured");
+        var connectionString =
+            app.Configuration.GetConnectionString("Default")
+            ?? throw new InvalidOperationException("ConnectionStrings:Default not configured");
 
         var builder = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(connectionString);
         var dbPath = builder.DataSource;
@@ -180,7 +196,9 @@ public partial class Program
         }
         else
         {
-            logger.LogInformation("AutoMigrate=false; ensure migrations have been applied out-of-band.");
+            logger.LogInformation(
+                "AutoMigrate=false; ensure migrations have been applied out-of-band."
+            );
         }
 
         await DatabaseSeeder.SeedAsync(db, default);

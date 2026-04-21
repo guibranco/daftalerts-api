@@ -12,7 +12,11 @@ public sealed class EircodeTests
     [InlineData("d02kc86", "D02KC86", "D02")]
     [InlineData("  A96W5P0  ", "A96W5P0", "A96")]
     [InlineData("T12 X5P0", "T12X5P0", "T12")]
-    public void Parse_should_normalize_and_uppercase(string input, string expectedValue, string expectedRk)
+    public void Parse_should_normalize_and_uppercase(
+        string input,
+        string expectedValue,
+        string expectedRk
+    )
     {
         Eircode.TryParse(input, out var e).Should().BeTrue();
         e.Value.Should().Be(expectedValue);

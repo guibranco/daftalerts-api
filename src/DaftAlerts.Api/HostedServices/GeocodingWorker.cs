@@ -32,14 +32,23 @@ public sealed class GeocodingWorker : BackgroundService
             {
                 await RunOnceAsync(stoppingToken);
             }
-            catch (OperationCanceledException) { break; }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "GeocodingWorker iteration failed");
             }
 
-            try { await Task.Delay(Interval, stoppingToken); }
-            catch (OperationCanceledException) { break; }
+            try
+            {
+                await Task.Delay(Interval, stoppingToken);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
         }
     }
 
@@ -61,7 +70,8 @@ public sealed class GeocodingWorker : BackgroundService
         {
             ct.ThrowIfCancellationRequested();
             var point = await geocoder.GeocodeAsync(p.Address, p.Eircode, ct);
-            if (point is null) continue;
+            if (point is null)
+                continue;
             p.Latitude = point.Value.Latitude;
             p.Longitude = point.Value.Longitude;
             p.UpdatedAt = DateTime.UtcNow;

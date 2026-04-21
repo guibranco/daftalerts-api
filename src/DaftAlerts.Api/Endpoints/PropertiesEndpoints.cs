@@ -47,7 +47,8 @@ public static class PropertiesEndpoints
         string? propertyTypes = null,
         string? berMin = null,
         string sortBy = "receivedAt",
-        string sortDir = "desc")
+        string sortDir = "desc"
+    )
     {
         var query = new PropertyQuery(
             Status: PropertyMappings.ParseStatusString(status),
@@ -63,24 +64,30 @@ public static class PropertiesEndpoints
             PropertyTypes: SplitCsv(propertyTypes),
             BerMin: berMin,
             SortBy: ParseSortField(sortBy),
-            SortDir: ParseSortDir(sortDir));
+            SortDir: ParseSortDir(sortDir)
+        );
 
         var validation = await validator.ValidateAsync(query, ct);
         if (!validation.IsValid)
         {
-            var dict = validation.Errors
-                .GroupBy(e => e.PropertyName)
+            var dict = validation
+                .Errors.GroupBy(e => e.PropertyName)
                 .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
             return TypedResults.ValidationProblem(dict);
         }
 
         var result = await repo.QueryAsync(query, ct);
         var dtos = result.Items.Select(p => p.ToDto()).ToArray();
-        return TypedResults.Ok(new PagedResult<PropertyDto>(dtos, result.Total, result.Page, result.PageSize));
+        return TypedResults.Ok(
+            new PagedResult<PropertyDto>(dtos, result.Total, result.Page, result.PageSize)
+        );
     }
 
     private static async Task<Results<Ok<PropertyDto>, NotFound>> GetAsync(
-        Guid id, IPropertyRepository repo, CancellationToken ct)
+        Guid id,
+        IPropertyRepository repo,
+        CancellationToken ct
+    )
     {
         var property = await repo.GetByIdAsync(id, ct);
         return property is null ? TypedResults.NotFound() : TypedResults.Ok(property.ToDto());
@@ -93,19 +100,21 @@ public static class PropertiesEndpoints
         IUnitOfWork uow,
         IClock clock,
         IValidator<UpdatePropertyDto> validator,
-        CancellationToken ct)
+        CancellationToken ct
+    )
     {
         var validation = await validator.ValidateAsync(dto, ct);
         if (!validation.IsValid)
         {
-            var dict = validation.Errors
-                .GroupBy(e => e.PropertyName)
+            var dict = validation
+                .Errors.GroupBy(e => e.PropertyName)
                 .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
             return TypedResults.ValidationProblem(dict);
         }
 
         var property = await repo.GetByIdAsync(id, ct);
-        if (property is null) return TypedResults.NotFound();
+        if (property is null)
+            return TypedResults.NotFound();
 
         if (!string.IsNullOrWhiteSpace(dto.Status))
         {
@@ -127,13 +136,14 @@ public static class PropertiesEndpoints
         IPropertyRepository repo,
         IUnitOfWork uow,
         IValidator<BulkActionDto> validator,
-        CancellationToken ct)
+        CancellationToken ct
+    )
     {
         var validation = await validator.ValidateAsync(dto, ct);
         if (!validation.IsValid)
         {
-            var dict = validation.Errors
-                .GroupBy(e => e.PropertyName)
+            var dict = validation
+                .Errors.GroupBy(e => e.PropertyName)
                 .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
             return TypedResults.ValidationProblem(dict);
         }
@@ -149,15 +159,21 @@ public static class PropertiesEndpoints
     private static IReadOnlyList<string>? SplitCsv(string? csv) =>
         string.IsNullOrWhiteSpace(csv)
             ? null
-            : csv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            : csv.Split(
+                ',',
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+            );
 
-    private static PropertySortField ParseSortField(string s) => s.ToLowerInvariant() switch
-    {
-        "price" => PropertySortField.Price,
-        "beds" => PropertySortField.Beds,
-        _ => PropertySortField.ReceivedAt
-    };
+    private static PropertySortField ParseSortField(string s) =>
+        s.ToLowerInvariant() switch
+        {
+            "price" => PropertySortField.Price,
+            "beds" => PropertySortField.Beds,
+            _ => PropertySortField.ReceivedAt,
+        };
 
     private static SortDirection ParseSortDir(string s) =>
-        string.Equals(s, "asc", StringComparison.OrdinalIgnoreCase) ? SortDirection.Asc : SortDirection.Desc;
+        string.Equals(s, "asc", StringComparison.OrdinalIgnoreCase)
+            ? SortDirection.Asc
+            : SortDirection.Desc;
 }

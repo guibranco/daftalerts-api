@@ -6,7 +6,10 @@ namespace DaftAlerts.Api.Configuration;
 
 internal static class RateLimitSetup
 {
-    public static IServiceCollection AddApiRateLimiting(this IServiceCollection services, IConfiguration config)
+    public static IServiceCollection AddApiRateLimiting(
+        this IServiceCollection services,
+        IConfiguration config
+    )
     {
         services.AddMemoryCache();
 
@@ -23,8 +26,8 @@ internal static class RateLimitSetup
                 {
                     Endpoint = "*:/api/*",
                     Period = "1m",
-                    Limit = 300
-                }
+                    Limit = 300,
+                },
             ];
         });
 

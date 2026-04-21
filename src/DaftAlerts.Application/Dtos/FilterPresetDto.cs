@@ -15,7 +15,8 @@ public sealed record FilterPresetDto(
     IReadOnlyList<string> PropertyTypes,
     string? BerMin,
     bool IsDefault,
-    DateTime CreatedAt);
+    DateTime CreatedAt
+);
 
 public sealed record UpsertFilterPresetDto(
     string Name,
@@ -27,4 +28,5 @@ public sealed record UpsertFilterPresetDto(
     decimal? MaxPrice,
     IReadOnlyList<string> PropertyTypes,
     string? BerMin,
-    bool IsDefault);
+    bool IsDefault
+);
