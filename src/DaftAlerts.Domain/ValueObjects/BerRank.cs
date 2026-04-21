@@ -37,11 +37,11 @@ public static class BerRank
     {
         if (string.IsNullOrWhiteSpace(ber))
             return UnknownRank;
-        return Ranks.TryGetValue(ber.Trim(), out var r) ? r : UnknownRank;
+        return Ranks.GetValueOrDefault(ber.ToUpperInvariant().Trim(), UnknownRank);
     }
 
     public static bool IsKnown(string? ber) =>
-        !string.IsNullOrWhiteSpace(ber) && Ranks.ContainsKey(ber.Trim());
+        !string.IsNullOrWhiteSpace(ber) && Ranks.ContainsKey(ber.ToUpperInvariant().Trim());
 
     public static IReadOnlyCollection<string> All => (IReadOnlyCollection<string>)Ranks.Keys;
 }

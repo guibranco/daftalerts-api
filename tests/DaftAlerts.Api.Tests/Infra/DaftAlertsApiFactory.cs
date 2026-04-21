@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -47,14 +49,18 @@ public sealed class DaftAlertsApiFactory : WebApplicationFactory<Program>
         builder.ConfigureAppConfiguration(
             (_, config) =>
             {
+                var testDbPath = Path.Combine(
+                    Path.GetTempPath(),
+                    $"daftalerts-test-{Guid.NewGuid():N}.db"
+                );
+
                 config.AddInMemoryCollection(
                     new Dictionary<string, string?>
                     {
-                        ["Auth:ApiToken"] = TestToken,
-                        ["Cors:AllowedOrigins:0"] = "http://localhost:5173",
-                        ["Database:AutoMigrate"] = "false",
+                        ["ConnectionStrings:Default"] =
+                            $"Data Source={testDbPath};Cache=Shared;Foreign Keys=true",
+                        ["Auth:ApiToken"] = "test-token",
                         ["Geocoding:GoogleApiKey"] = "",
-                        ["IpRateLimiting:EnableEndpointRateLimiting"] = "false",
                     }
                 );
             }
@@ -100,8 +106,22 @@ public sealed class DaftAlertsApiFactory : WebApplicationFactory<Program>
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        if (disposing)
-            _conn.Dispose();
+        if (!disposing)
+        {
+            return;
+        }
+
+        _conn.Dispose();
+        // Best-effort cleanup of temp db files
+
+        try
+        {
+            foreach (var file in Directory.GetFiles(Path.GetTempPath(), "daftalerts-test-*.db*"))
+                File.Delete(file);
+        }
+        catch
+        { /* ignore */
+        }
     }
 }
 

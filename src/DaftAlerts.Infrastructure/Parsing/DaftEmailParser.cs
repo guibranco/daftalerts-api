@@ -31,10 +31,10 @@ public sealed partial class DaftEmailParser : IDaftEmailParser
     [GeneratedRegex(@"€\s*([\d,]+(?:\.\d{2})?)\s*per\s*month", RegexOptions.IgnoreCase, "en-IE")]
     private static partial Regex PriceRegex();
 
-    [GeneratedRegex(@"(\d+)\s*Bed\b", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"\b(\d+)\s*Beds?\b", RegexOptions.IgnoreCase)]
     private static partial Regex BedsRegex();
 
-    [GeneratedRegex(@"(\d+)\s*Bath\b", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"\b(\d+)\s*Baths?\b", RegexOptions.IgnoreCase)]
     private static partial Regex BathsRegex();
 
     [GeneratedRegex(@"/ber/([A-G]\d?|Exempt)\.png", RegexOptions.IgnoreCase)]

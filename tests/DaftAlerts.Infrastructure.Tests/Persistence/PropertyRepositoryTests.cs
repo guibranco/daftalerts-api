@@ -134,12 +134,15 @@ public sealed class PropertyRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task Filters_by_berMin_using_scalar_function()
     {
+        using var ctx = TestDbContextFactory.Create(out var conn);
         // berMin=C3 means C3 or better (rank <= 9). Inbox has A1(1), C3(9), G(15). Expect A1 and C3.
         var r = await _repo.QueryAsync(
             Query(PropertyStatus.Inbox, q => q.BerMin = "C3"),
             CancellationToken.None
         );
         r.Total.Should().Be(2);
+        conn.Dispose();
+
     }
 
     [Fact]

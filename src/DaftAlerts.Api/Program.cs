@@ -158,26 +158,33 @@ public partial class Program
         await app.RunAsync();
     }
 
-    private static void EnsureDatabaseDirectoryExists(WebApplication app)
+    static void EnsureDatabaseDirectoryExists(WebApplication app)
     {
         var connectionString =
             app.Configuration.GetConnectionString("Default")
             ?? throw new InvalidOperationException("ConnectionStrings:Default not configured");
 
-        var builder = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(connectionString);
-        var dbPath = builder.DataSource;
+        var csBuilder = new SqliteConnectionStringBuilder(connectionString);
+        var dbPath = csBuilder.DataSource;
 
-        // Handle relative paths
         if (!Path.IsPathRooted(dbPath))
-        {
             dbPath = Path.GetFullPath(dbPath, app.Environment.ContentRootPath);
-        }
 
         var directory = Path.GetDirectoryName(dbPath);
-        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+        if (string.IsNullOrEmpty(directory) || Directory.Exists(directory))
+            return;
+
+        try
         {
             Directory.CreateDirectory(directory);
-            app.Logger.LogInformation("Created database directory: {Directory}", directory);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            app.Logger.LogWarning(
+                ex,
+                "Could not create database directory {Directory}; assuming it's managed externally",
+                directory
+            );
         }
     }
 
