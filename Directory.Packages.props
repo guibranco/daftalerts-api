@@ -17,7 +17,6 @@
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.0" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
@@ -36,10 +35,12 @@
     <!-- Validation -->
     <PackageVersion Include="FluentValidation" Version="11.11.0" />
     <PackageVersion Include="FluentValidation.AspNetCore" Version="11.3.0" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.6" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
-    <!-- Email / HTML -->
-    <PackageVersion Include="MimeKit" Version="4.9.0" />
-    <PackageVersion Include="MailKit" Version="4.9.0" />
+    <!-- Email parsing -->
+    <PackageVersion Include="MimeKit" Version="4.15.1" />
+    <PackageVersion Include="MailKit" Version="4.15.1" />
+    <!-- HTML parsing -->
     <PackageVersion Include="HtmlAgilityPack" Version="1.11.72" />
     <!-- HTTP resilience -->
     <PackageVersion Include="Polly" Version="8.5.0" />
