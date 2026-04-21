@@ -45,8 +45,10 @@ public sealed partial class DaftEmailParser : IDaftEmailParser
 
     // --- Entry point --------------------------------------------------------
 
-    public ParsedDaftEmail? Parse(string htmlBody, string subject, DateTime receivedAt, string? messageId)
+    public ParsedDaftEmail? Parse(string htmlBody, string? subject, DateTime receivedAt, string? messageId)
     {
+        subject ??= string.Empty;
+
         if (string.IsNullOrWhiteSpace(htmlBody))
         {
             _logger.LogWarning("Daft email parse failed: empty HTML body (subject={Subject})", subject);

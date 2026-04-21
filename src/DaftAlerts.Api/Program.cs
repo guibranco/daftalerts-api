@@ -14,12 +14,14 @@ using DaftAlerts.Infrastructure.Persistence;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Scalar.AspNetCore;
 using Serilog;
 
 namespace DaftAlerts.Api;
@@ -86,19 +88,23 @@ public partial class Program
         builder.Services.Configure<ForwardedHeadersOptions>(o =>
         {
             o.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-            o.KnownNetworks.Clear();
+            o.KnownIPNetworks.Clear();
             o.KnownProxies.Clear();
         });
 
         // --- Swagger (dev only) -------------------------------------------
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen(c =>
+        builder.Services.AddOpenApi(options =>
         {
-            c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+            options.AddDocumentTransformer((document, context, cancellationToken) =>
             {
-                Title = "DaftAlerts API",
-                Version = "v1",
-                Description = "Personal Daft.ie property-alert aggregator."
+                document.Info = new()
+                {
+                    Title = "DaftAlerts API",
+                    Version = "v1",
+                    Description = "Personal Daft.ie property aggregator API"
+                };
+                return Task.CompletedTask;
             });
         });
 
@@ -113,12 +119,9 @@ public partial class Program
         {
             app.UseHsts();
         }
-        else
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI();
-        }
 
+        app.MapOpenApi();
+        app.MapScalarApiReference();
         app.UseCors();
         app.UseIpRateLimiting();
         app.UseMiddleware<BearerTokenMiddleware>();

@@ -11,6 +11,8 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.0" />
     <!-- ASP.NET Core / hosting -->
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.0.0" />
+    <!-- Microsoft.Extensions.* -->
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Http.Polly" Version="10.0.0" />
@@ -45,8 +47,6 @@
     <!-- HTTP resilience -->
     <PackageVersion Include="Polly" Version="8.5.0" />
     <PackageVersion Include="Polly.Extensions.Http" Version="3.0.0" />
-    <!-- OpenAPI -->
-    <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.2.0" />
     <!-- Rate limiting -->
     <PackageVersion Include="AspNetCoreRateLimit" Version="5.0.0" />
     <!-- Testing -->
