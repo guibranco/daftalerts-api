@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -93,7 +92,7 @@ public sealed class EmailIngestionPipeline : IEmailIngestionPipeline
             return new IngestionResult(IngestionOutcome.ParseFailed, messageId, rawEmail.ParseError, null, rawEmail.Id);
         }
 
-        var parsed = _parser.Parse(htmlBody!, subject, receivedAt, messageId);
+        var parsed = _parser.Parse(htmlBody, subject, receivedAt, messageId);
         if (parsed is null)
         {
             rawEmail.ParseStatus = ParseStatus.Failed;
@@ -171,7 +170,7 @@ public sealed class EmailIngestionPipeline : IEmailIngestionPipeline
         var parts = new[]
         {
             message.Date.ToString("O"),
-            message.From?.ToString() ?? string.Empty,
+            message.From.ToString(),
             message.Subject ?? string.Empty
         };
         return Hash("fallback:" + string.Join("|", parts));

@@ -151,6 +151,6 @@ public sealed class PropertyRepository : IPropertyRepository
 /// </summary>
 public static class SqliteFunctions
 {
-    [Microsoft.EntityFrameworkCore.DbFunction("berrank", IsBuiltIn = false)]
-    public static int BerRank(string? ber) => DaftAlerts.Domain.ValueObjects.BerRank.Rank(ber);
+    [DbFunction("berrank", IsBuiltIn = false)]
+    public static int BerRank(string? ber) => Domain.ValueObjects.BerRank.Rank(ber);
 }

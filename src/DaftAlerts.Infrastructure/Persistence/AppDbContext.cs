@@ -4,7 +4,6 @@ using System.Data.Common;
 using System.Linq;
 using System.Text.Json;
 using DaftAlerts.Domain.Entities;
-using DaftAlerts.Domain.Enums;
 using DaftAlerts.Domain.ValueObjects;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -86,8 +85,8 @@ public sealed class AppDbContext : DbContext
 
         var stringListComparer = new ValueComparer<IReadOnlyList<string>>(
             (a, c) => (a ?? Array.Empty<string>()).SequenceEqual(c ?? Array.Empty<string>()),
-            v => v == null ? 0 : v.Aggregate(0, (h, s) => HashCode.Combine(h, s)),
-            v => v == null ? Array.Empty<string>() : v.ToArray());
+            v =>  v.Aggregate(0, (h, s) => HashCode.Combine(h, s)),
+            v =>  v.ToArray());
 
         b.Property(f => f.RoutingKeys)
             .HasColumnName("RoutingKeysJson")
@@ -160,7 +159,7 @@ internal sealed class SqliteScalarFunctionInterceptor : DbConnectionInterceptor
     {
         if (connection is not SqliteConnection sqlite) return;
 
-        sqlite.CreateFunction<string?, int>(
+        sqlite.CreateFunction(
             name: "berrank",
             function: (string? ber) => BerRank.Rank(ber),
             isDeterministic: true);

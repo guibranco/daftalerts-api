@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using AspNetCoreRateLimit;
 using DaftAlerts.Api.Configuration;
@@ -18,7 +17,6 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -97,7 +95,7 @@ public partial class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddOpenApi(options =>
         {
-            options.AddDocumentTransformer((document, context, cancellationToken) =>
+            options.AddDocumentTransformer((document, _, _) =>
             {
                 document.Info = new()
                 {
@@ -145,7 +143,7 @@ public partial class Program
         await app.RunAsync();
     }
 
-    static void EnsureDatabaseDirectoryExists(WebApplication app)
+    private static void EnsureDatabaseDirectoryExists(WebApplication app)
     {
         var connectionString = app.Configuration.GetConnectionString("Default")
                                ?? throw new InvalidOperationException("ConnectionStrings:Default not configured");

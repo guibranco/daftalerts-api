@@ -88,8 +88,8 @@ public sealed partial class DaftEmailParser : IDaftEmailParser
         }
 
         return new ParsedDaftEmail(
-            DaftId: daftId!,
-            DaftUrl: daftUrl!,
+            DaftId: daftId,
+            DaftUrl: daftUrl,
             Address: address,
             Eircode: eircode,
             RoutingKey: routingKey,
@@ -100,7 +100,7 @@ public sealed partial class DaftEmailParser : IDaftEmailParser
             BerRating: berRating,
             MainImageUrl: mainImageUrl,
             ReceivedAt: receivedAt.ToUniversalTime(),
-            RawSubject: subject ?? string.Empty,
+            RawSubject: subject,
             MessageId: messageId);
     }
 
