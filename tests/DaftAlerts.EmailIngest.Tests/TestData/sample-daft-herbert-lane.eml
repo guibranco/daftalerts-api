@@ -1,0 +1,76 @@
+Return-Path: <alerts@daft.ie>
+Delivered-To: daft@logs.straccini.com
+Received: from mx.daft.ie (mx.daft.ie [192.0.2.10])
+	by logs.straccini.com (Postfix) with ESMTPS id 1234567890
+	for <daft@logs.straccini.com>; Tue, 15 Apr 2026 09:12:34 +0000 (UTC)
+Date: Tue, 15 Apr 2026 09:12:30 +0000
+From: "Daft.ie Alerts" <alerts@daft.ie>
+To: daft@logs.straccini.com
+Message-ID: <alert.6546017.20260415091230@daft.ie>
+Subject: Dublin 2, House To Let, =?UTF-8?B?4oKsMiw4NTA=?= per month.
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="----=_Part_001"
+
+------=_Part_001
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+New listing from your Daft.ie alert
+
+Herbert Lane Mews, Dublin 2, D02KC86
+House, 2 Bed, 2 Bath, EUR 2,850 per month
+https://www.daft.ie/for-rent/house-herbert-lane-mews-dublin-2/6546017
+
+------=_Part_001
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html>
+<html><head><meta charset=3D"UTF-8"><title>Daft alert</title></head>
+<body style=3D"margin:0;padding:0;font-family:Arial,sans-serif">
+  <table width=3D"600" cellpadding=3D"0" cellspacing=3D"0" align=3D"center">
+    <tr>
+      <td>
+        <h1 style=3D"font-size:18px">New listing matching your alert</h1>
+        <p>Dublin 2, House To Let, =E2=82=AC2,850 per month.</p>
+
+        <a href=3D"https://www.daft.ie/for-rent/house-herbert-lane-mews-dublin-2/6546017"
+           originalsrc=3D"https://www.daft.ie/for-rent/house-herbert-lane-mews-dublin-2/6546017"
+           style=3D"text-decoration:none;color:#000">
+          <img src=3D"https://media.daft.ie/listings/6546017/hero.jpg"
+               width=3D"600" height=3D"400" alt=3D"Property photo"
+               style=3D"display:block;width:100%;height:auto"/>
+        </a>
+
+        <div style=3D"padding:16px">
+          <a css-class=3D"address" style=3D"font-size:18px;font-weight:bold;color:#000;text-decoration:none"
+             href=3D"https://www.daft.ie/for-rent/house-herbert-lane-mews-dublin-2/6546017">
+            Herbert Lane Mews , Dublin 2, D02KC86
+          </a>
+          <p style=3D"font-size:16px;color:#2b2b2b;margin:8px 0">=E2=82=AC2,850 per month</p>
+
+          <table cellpadding=3D"0" cellspacing=3D"0">
+            <tr>
+              <td style=3D"padding-right:12px"><p style=3D"margin:0">2 Bed</p></td>
+              <td style=3D"padding-right:12px"><p style=3D"margin:0">2 Bath</p></td>
+              <td><p style=3D"margin:0">House</p></td>
+            </tr>
+          </table>
+
+          <p style=3D"margin-top:12px">
+            BER:
+            <img src=3D"https://mailassets.distilled.ie/email/daft/ber/C1.png"
+                 width=3D"60" height=3D"20" alt=3D"C1" />
+          </p>
+
+          <a href=3D"https://www.daft.ie/for-rent/house-herbert-lane-mews-dublin-2/6546017"
+             originalsrc=3D"https://www.daft.ie/for-rent/house-herbert-lane-mews-dublin-2/6546017"
+             style=3D"display:inline-block;padding:12px 20px;background:#00B2A9;color:#fff;
+                     text-decoration:none;border-radius:4px">View on Daft.ie</a>
+        </div>
+      </td>
+    </tr>
+  </table>
+</body></html>
+
+------=_Part_001--

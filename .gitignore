@@ -1,0 +1,78 @@
+# ---- .NET build output -------------------------------------------------
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+out/
+*.user
+*.suo
+*.userprefs
+*.pidb
+*.usertasks
+*.cache
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Publish output
+publish/
+PublishProfiles/
+
+# ---- IDEs --------------------------------------------------------------
+.vs/
+.vscode/
+.idea/
+*.sln.docstates
+
+# JetBrains
+*.ReSharper/
+*.DotSettings.user
+_ReSharper.*/
+
+# ---- Test output -------------------------------------------------------
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+coverage/
+coverage.*.xml
+coverage.cobertura.xml
+coverage.opencover.xml
+lcov.info
+
+# ---- Runtime data (never commit the DB or logs) -----------------------
+data/
+*.db
+*.db-shm
+*.db-wal
+/var/lib/daftalerts/
+/var/log/daftalerts/
+logs/
+*.log
+
+# ---- Secrets -----------------------------------------------------------
+.env
+.env.*
+!.env.example
+appsettings.Local.json
+appsettings.*.Local.json
+secrets.json
+
+# ---- OS ----------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Docker ------------------------------------------------------------
+docker-compose.override.yml
+
+# ---- Misc --------------------------------------------------------------
+*.swp
+*.bak
+*.tmp

@@ -1,0 +1,22 @@
+[Unit]
+Description=DaftAlerts API
+After=network.target
+
+[Service]
+Type=notify
+User=daftalerts
+Group=daftalerts
+WorkingDirectory=/opt/daftalerts/api
+ExecStart=/usr/bin/dotnet /opt/daftalerts/api/DaftAlerts.Api.dll
+Restart=on-failure
+RestartSec=5
+KillSignal=SIGINT
+SyslogIdentifier=daftalerts-api
+Environment=DOTNET_CLI_HOME=/tmp
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://127.0.0.1:5080
+# Set these via an EnvironmentFile in production:
+# EnvironmentFile=/etc/daftalerts/api.env
+
+[Install]
+WantedBy=multi-user.target

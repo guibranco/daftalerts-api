@@ -1,0 +1,44 @@
+services:
+  api:
+    build:
+      context: .
+    image: ghcr.io/guibranco/daftalerts-api:latest
+    container_name: daftalerts-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      DaftAlerts__Auth__ApiToken: ${DAFTALERTS_API_TOKEN}
+      DaftAlerts__Geocoding__GoogleApiKey: ${GOOGLE_GEOCODING_API_KEY}
+      DaftAlerts__Cors__AllowedOrigins__0: ${FRONTEND_ORIGIN}
+      DaftAlerts__Database__AutoMigrate: "true"
+    volumes:
+      - /var/lib/daftalerts:/var/lib/daftalerts
+      - /var/log/daftalerts:/var/log/daftalerts
+    expose:
+      - "5080"
+    networks:
+      - daftnet
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:5080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: daftalerts-nginx
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/nginx/daftalerts.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    networks:
+      - daftnet
+
+networks:
+  daftnet:
+    driver: bridge
