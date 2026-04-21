@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AspNetCoreRateLimit;
@@ -138,9 +139,32 @@ public partial class Program
         });
 
         // --- DB: migrate + seed -------------------------------------------
+        EnsureDatabaseDirectoryExists(app);
         await InitializeDatabaseAsync(app);
 
         await app.RunAsync();
+    }
+
+    static void EnsureDatabaseDirectoryExists(WebApplication app)
+    {
+        var connectionString = app.Configuration.GetConnectionString("Default")
+                               ?? throw new InvalidOperationException("ConnectionStrings:Default not configured");
+
+        var builder = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(connectionString);
+        var dbPath = builder.DataSource;
+
+        // Handle relative paths
+        if (!Path.IsPathRooted(dbPath))
+        {
+            dbPath = Path.GetFullPath(dbPath, app.Environment.ContentRootPath);
+        }
+
+        var directory = Path.GetDirectoryName(dbPath);
+        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+            app.Logger.LogInformation("Created database directory: {Directory}", directory);
+        }
     }
 
     private static async Task InitializeDatabaseAsync(WebApplication app)
