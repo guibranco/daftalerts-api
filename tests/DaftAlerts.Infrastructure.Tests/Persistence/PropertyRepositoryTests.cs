@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using DaftAlerts.Application.Dtos;
 using DaftAlerts.Domain.Entities;
 using DaftAlerts.Domain.Enums;
+using DaftAlerts.Domain.ValueObjects;
 using DaftAlerts.Infrastructure.Persistence;
 using DaftAlerts.Infrastructure.Persistence.Repositories;
 using FluentAssertions;
@@ -24,6 +25,7 @@ public sealed class PropertyRepositoryTests : IAsyncLifetime
     {
         _conn = new SqliteConnection("Data Source=:memory:");
         await _conn.OpenAsync();
+        _conn.CreateFunction("berrank", (string? ber) => BerRank.Rank(ber), isDeterministic: true);
 
         var options = new DbContextOptionsBuilder<AppDbContext>().UseSqlite(_conn).Options;
 

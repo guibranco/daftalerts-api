@@ -86,8 +86,11 @@ public sealed partial class DaftEmailParser : IDaftEmailParser
         var price = ExtractPrice(subject, htmlBody);
 
         // --- Body-derived fields -------------------------------------------
-        var beds = ExtractFirstInt(doc.DocumentNode.InnerText, BedsRegex());
-        var baths = ExtractFirstInt(doc.DocumentNode.InnerText, BathsRegex());
+        // Use tag-stripped text so adjacent <p> elements don't bleed into each other
+        // (e.g. "<p>1 Bed</p><p>1 Bath</p>" becomes "1 Bed  1 Bath " preserving word boundaries).
+        var bodyTextSpaced = Regex.Replace(doc.DocumentNode.InnerHtml, @"<[^>]+>", " ");
+        var beds = ExtractFirstInt(bodyTextSpaced, BedsRegex());
+        var baths = ExtractFirstInt(bodyTextSpaced, BathsRegex());
 
         var berRating = ExtractBer(doc);
         var mainImageUrl = ExtractMainImage(doc);
@@ -272,9 +275,7 @@ public sealed partial class DaftEmailParser : IDaftEmailParser
             if (m.Success)
             {
                 var val = m.Groups[1].Value;
-                return string.Equals(val, "Exempt", StringComparison.OrdinalIgnoreCase)
-                    ? "Exempt"
-                    : val.ToUpperInvariant();
+                return val.ToUpperInvariant();
             }
         }
         return null;
