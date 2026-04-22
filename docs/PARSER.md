@@ -1,3 +1,9 @@
+---
+title: Parser
+nav_order: 4
+permalink: /parser/
+---
+
 # Daft.ie email parser
 
 Implemented in `DaftAlerts.Infrastructure/Parsing/DaftEmailParser.cs`. Turns an HTML alert email body into a `ParsedDaftEmail` DTO.

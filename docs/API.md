@@ -1,3 +1,10 @@
+---
+title: Api
+nav_order: 5
+permalink: /api/
+description: "<short description>"
+---
+
 # API reference
 
 Base URL: `https://daftalerts.example.com/api` (or `http://localhost:5080/api` in development).

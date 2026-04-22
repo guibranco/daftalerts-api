@@ -1,3 +1,10 @@
+---
+title: Architecture
+nav_order: 2
+permalink: /architecture/
+description: "Clean Architecture layers, project dependencies, data flow, background workers."
+---
+
 # Architecture
 
 DaftAlerts follows Clean Architecture with the standard dependency flow: **Domain ← Application ← Infrastructure ← Api / EmailIngest**. The dependency rule is enforced at build time by project references; there are no upward references.

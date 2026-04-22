@@ -1,5 +1,11 @@
 # DaftAlerts
 
+[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![Build](https://github.com/guibranco/daftalerts-api/actions/workflows/ci.yml/badge.svg)](https://github.com/guibranco/daftalerts-api/actions/workflows/ci.yml)
+[![Codecov](https://codecov.io/gh/guibranco/daftalerts-api/branch/main/graph/badge.svg)](https://codecov.io/gh/guibranco/daftalerts-api)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](../LICENSE)
+[![Container](https://img.shields.io/badge/ghcr.io-daftalerts--api-2496ED?logo=docker&logoColor=white)](https://github.com/guibranco/daftalerts-api/pkgs/container/daftalerts-api)
+
 Personal property-alert aggregator for [Daft.ie](https://www.daft.ie). Ingests Daft alert emails via SMTP piping, parses them into structured records, geocodes addresses, and exposes a REST API consumed by a separate React frontend.
 
 Single-tenant, built for one user: a senior software engineer in Dublin, Ireland, deploying to an Oracle Cloud Infrastructure (OCI) Ubuntu VPS.
