@@ -155,8 +155,12 @@ public partial class Program
         );
 
         // --- DB: migrate + seed -------------------------------------------
-        EnsureDatabaseDirectoryExists(app);
-        await InitializeDatabaseAsync(app);
+        // Skip in Testing — the WebApplicationFactory creates the schema via EnsureCreated().
+        if (!app.Environment.IsEnvironment("Testing"))
+        {
+            EnsureDatabaseDirectoryExists(app);
+            await InitializeDatabaseAsync(app);
+        }
 
         await app.RunAsync();
     }
