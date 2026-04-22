@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
-using DaftAlerts.Api;
 using DaftAlerts.Application.Abstractions;
 using DaftAlerts.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
@@ -22,19 +22,25 @@ public sealed class DaftAlertsApiFactory : WebApplicationFactory<Program>
 {
     public const string TestToken = "test-token-abcdef";
 
-    private readonly SqliteConnection _conn;
+    // Named in-memory SQLite with shared cache so multiple EF Core connections share data
+    // while each gets its own SqliteConnection object (avoids concurrent CreateFunction crashes).
+    private readonly string _connString;
+    private readonly SqliteConnection _keeper;
 
     public DaftAlertsApiFactory()
     {
-        _conn = new SqliteConnection("DataSource=:memory:");
-        _conn.Open();
+        var dbName = $"testdb{Guid.NewGuid():N}";
+        _connString = $"Data Source=file:{dbName}?mode=memory&cache=shared";
+        // Keep one connection open so the named in-memory DB isn't dropped between EF Core scopes.
+        _keeper = new SqliteConnection(_connString);
+        _keeper.Open();
     }
 
     protected override IHost CreateHost(IHostBuilder builder)
     {
         var host = base.CreateHost(builder);
 
-        // Create schema on the shared connection once.
+        // Create schema once after the host (and DI container) is ready.
         using var scope = host.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         db.Database.EnsureCreated();
@@ -46,29 +52,43 @@ public sealed class DaftAlertsApiFactory : WebApplicationFactory<Program>
     {
         builder.UseEnvironment("Testing");
 
-        builder.ConfigureAppConfiguration((_, config) =>
-        {
-            config.AddInMemoryCollection(new Dictionary<string, string?>
+        builder.ConfigureAppConfiguration(
+            (_, config) =>
             {
-                ["Auth:ApiToken"] = TestToken,
-                ["Cors:AllowedOrigins:0"] = "http://localhost:5173",
-                ["Database:AutoMigrate"] = "false",
-                ["Geocoding:GoogleApiKey"] = "",
-                ["IpRateLimiting:EnableEndpointRateLimiting"] = "false",
-            });
-        });
+                var testDbPath = Path.Combine(
+                    Path.GetTempPath(),
+                    $"daftalerts-test-{Guid.NewGuid():N}.db"
+                );
+
+                config.AddInMemoryCollection(
+                    new Dictionary<string, string?>
+                    {
+                        ["ConnectionStrings:Default"] =
+                            $"Data Source={testDbPath};Cache=Shared;Foreign Keys=true",
+                        ["Auth:ApiToken"] = TestToken,
+                        ["Geocoding:GoogleApiKey"] = "",
+                    }
+                );
+            }
+        );
 
         builder.ConfigureServices(services =>
         {
-            // Remove the production DbContext registration and bind it to our shared in-memory SQLite connection.
-            var descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
-            if (descriptor is not null) services.Remove(descriptor);
+            // Replace the production DbContext with the shared in-memory named database.
+            var descriptor = services.FirstOrDefault(d =>
+                d.ServiceType == typeof(DbContextOptions<AppDbContext>)
+            );
+            if (descriptor is not null)
+                services.Remove(descriptor);
 
-            services.AddDbContext<AppDbContext>(o => o.UseSqlite(_conn));
+            services.AddDbContext<AppDbContext>(o => o.UseSqlite(_connString));
 
             // Replace geocoding with a noop — we don't want network calls in tests.
-            var geoDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(IGeocodingService));
-            if (geoDescriptor is not null) services.Remove(geoDescriptor);
+            var geoDescriptor = services.FirstOrDefault(d =>
+                d.ServiceType == typeof(IGeocodingService)
+            );
+            if (geoDescriptor is not null)
+                services.Remove(geoDescriptor);
             services.AddScoped<IGeocodingService, NoopGeocodingService>();
         });
     }
@@ -76,20 +96,36 @@ public sealed class DaftAlertsApiFactory : WebApplicationFactory<Program>
     public HttpClient CreateAuthedClient()
     {
         var client = CreateClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TestToken);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            TestToken
+        );
         return client;
     }
 
     public AppDbContext CreateDbContext()
     {
-        var options = new DbContextOptionsBuilder<AppDbContext>().UseSqlite(_conn).Options;
+        // Accessing Services forces the host to start, ensuring EnsureCreated() has run.
+        _ = Services;
+        var options = new DbContextOptionsBuilder<AppDbContext>().UseSqlite(_connString).Options;
         return new AppDbContext(options);
     }
 
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        if (disposing) _conn.Dispose();
+        if (!disposing)
+            return;
+
+        _keeper.Dispose();
+        try
+        {
+            foreach (var file in Directory.GetFiles(Path.GetTempPath(), "daftalerts-test-*.db*"))
+                File.Delete(file);
+        }
+        catch
+        { /* ignore */
+        }
     }
 }
 

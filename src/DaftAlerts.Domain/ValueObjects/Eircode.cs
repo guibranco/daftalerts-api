@@ -11,11 +11,13 @@ public readonly record struct Eircode
 {
     private static readonly Regex EircodePattern = new(
         @"^[ADCEFHKNPRTVWXY]\d{2}\s?[A-Z0-9]{4}$",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        RegexOptions.IgnoreCase | RegexOptions.Compiled
+    );
 
     public static readonly Regex ExtractPattern = new(
         @"\b([ADCEFHKNPRTVWXY]\d{2}\s?[A-Z0-9]{4})\b",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        RegexOptions.IgnoreCase | RegexOptions.Compiled
+    );
 
     public string Value { get; }
     public string RoutingKey => Value[..3];
@@ -28,12 +30,16 @@ public readonly record struct Eircode
     public static bool TryParse(string? input, out Eircode eircode)
     {
         eircode = default;
-        if (string.IsNullOrWhiteSpace(input)) return false;
+        if (string.IsNullOrWhiteSpace(input))
+            return false;
 
         var trimmed = input.Trim();
-        if (!EircodePattern.IsMatch(trimmed)) return false;
+        if (!EircodePattern.IsMatch(trimmed))
+            return false;
 
-        var normalized = trimmed.Replace(" ", string.Empty, StringComparison.Ordinal).ToUpperInvariant();
+        var normalized = trimmed
+            .Replace(" ", string.Empty, StringComparison.Ordinal)
+            .ToUpperInvariant();
         eircode = new Eircode(normalized);
         return true;
     }
@@ -48,9 +54,11 @@ public readonly record struct Eircode
     /// <summary>Extracts the first Eircode found anywhere in <paramref name="text"/>, or null.</summary>
     public static Eircode? Extract(string? text)
     {
-        if (string.IsNullOrWhiteSpace(text)) return null;
+        if (string.IsNullOrWhiteSpace(text))
+            return null;
         var match = ExtractPattern.Match(text);
-        if (!match.Success) return null;
+        if (!match.Success)
+            return null;
         return TryParse(match.Groups[1].Value, out var e) ? e : null;
     }
 

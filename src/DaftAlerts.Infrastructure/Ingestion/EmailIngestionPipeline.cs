@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -10,8 +9,8 @@ using DaftAlerts.Application.Parsing;
 using DaftAlerts.Domain.Entities;
 using DaftAlerts.Domain.Enums;
 using HtmlAgilityPack;
-using MimeKit;
 using Microsoft.Extensions.Logging;
+using MimeKit;
 
 namespace DaftAlerts.Infrastructure.Ingestion;
 
@@ -35,7 +34,8 @@ public sealed class EmailIngestionPipeline : IEmailIngestionPipeline
         IDaftEmailParser parser,
         IUnitOfWork uow,
         IClock clock,
-        ILogger<EmailIngestionPipeline> logger)
+        ILogger<EmailIngestionPipeline> logger
+    )
     {
         _rawEmails = rawEmails;
         _properties = properties;
@@ -63,12 +63,20 @@ public sealed class EmailIngestionPipeline : IEmailIngestionPipeline
 
         var messageId = ResolveMessageId(message);
         var subject = message.Subject ?? string.Empty;
-        var receivedAt = (message.Date.UtcDateTime == DateTime.MinValue ? _clock.UtcNow : message.Date.UtcDateTime);
+        var receivedAt = (
+            message.Date.UtcDateTime == DateTime.MinValue ? _clock.UtcNow : message.Date.UtcDateTime
+        );
 
         if (await _rawEmails.ExistsByMessageIdAsync(messageId, ct))
         {
             _logger.LogInformation("Ingest: duplicate message-id={MessageId}, skipping", messageId);
-            return new IngestionResult(IngestionOutcome.DuplicateIgnored, messageId, null, null, null);
+            return new IngestionResult(
+                IngestionOutcome.DuplicateIgnored,
+                messageId,
+                null,
+                null,
+                null
+            );
         }
 
         var rawEmail = new RawEmail
@@ -79,7 +87,7 @@ public sealed class EmailIngestionPipeline : IEmailIngestionPipeline
             ReceivedAt = receivedAt,
             RawMimeBytes = rawBytes,
             ParseStatus = ParseStatus.Pending,
-            LastAttemptAt = _clock.UtcNow
+            LastAttemptAt = _clock.UtcNow,
         };
         await _rawEmails.AddAsync(rawEmail, ct);
 
@@ -90,17 +98,29 @@ public sealed class EmailIngestionPipeline : IEmailIngestionPipeline
             rawEmail.ParseError = "No HTML body found in message.";
             await _uow.SaveChangesAsync(ct);
             _logger.LogWarning("Ingest: no HTML body for message-id={MessageId}", messageId);
-            return new IngestionResult(IngestionOutcome.ParseFailed, messageId, rawEmail.ParseError, null, rawEmail.Id);
+            return new IngestionResult(
+                IngestionOutcome.ParseFailed,
+                messageId,
+                rawEmail.ParseError,
+                null,
+                rawEmail.Id
+            );
         }
 
-        var parsed = _parser.Parse(htmlBody!, subject, receivedAt, messageId);
+        var parsed = _parser.Parse(htmlBody, subject, receivedAt, messageId);
         if (parsed is null)
         {
             rawEmail.ParseStatus = ParseStatus.Failed;
             rawEmail.ParseError = "Parser returned null (not a recognized Daft alert layout).";
             await _uow.SaveChangesAsync(ct);
             _logger.LogWarning("Ingest: parse failed for message-id={MessageId}", messageId);
-            return new IngestionResult(IngestionOutcome.NotADaftEmail, messageId, rawEmail.ParseError, null, rawEmail.Id);
+            return new IngestionResult(
+                IngestionOutcome.NotADaftEmail,
+                messageId,
+                rawEmail.ParseError,
+                null,
+                rawEmail.Id
+            );
         }
 
         // Upsert by DaftId
@@ -129,7 +149,7 @@ public sealed class EmailIngestionPipeline : IEmailIngestionPipeline
                 RawSubject = parsed.RawSubject,
                 RawEmailMessageId = parsed.MessageId,
                 CreatedAt = now,
-                UpdatedAt = now
+                UpdatedAt = now,
             };
             await _properties.AddAsync(property, ct);
         }
@@ -157,8 +177,18 @@ public sealed class EmailIngestionPipeline : IEmailIngestionPipeline
 
         await _uow.SaveChangesAsync(ct);
 
-        _logger.LogInformation("Ingest: stored property daftId={DaftId} id={PropertyId}", parsed.DaftId, property.Id);
-        return new IngestionResult(IngestionOutcome.Created, messageId, null, property.Id, rawEmail.Id);
+        _logger.LogInformation(
+            "Ingest: stored property daftId={DaftId} id={PropertyId}",
+            parsed.DaftId,
+            property.Id
+        );
+        return new IngestionResult(
+            IngestionOutcome.Created,
+            messageId,
+            null,
+            property.Id,
+            rawEmail.Id
+        );
     }
 
     // --- helpers ------------------------------------------------------------
@@ -171,8 +201,8 @@ public sealed class EmailIngestionPipeline : IEmailIngestionPipeline
         var parts = new[]
         {
             message.Date.ToString("O"),
-            message.From?.ToString() ?? string.Empty,
-            message.Subject ?? string.Empty
+            message.From.ToString(),
+            message.Subject ?? string.Empty,
         };
         return Hash("fallback:" + string.Join("|", parts));
     }
@@ -187,11 +217,13 @@ public sealed class EmailIngestionPipeline : IEmailIngestionPipeline
     {
         // MimeKit exposes HtmlBody for the preferred HTML part (walks alternatives/attachments).
         var html = message.HtmlBody;
-        if (!string.IsNullOrWhiteSpace(html)) return html;
+        if (!string.IsNullOrWhiteSpace(html))
+            return html;
 
         // Fallback: if only a text body is present, wrap it so the parser has something to chew on.
         var text = message.TextBody;
-        if (string.IsNullOrWhiteSpace(text)) return null;
+        if (string.IsNullOrWhiteSpace(text))
+            return null;
 
         var doc = new HtmlDocument();
         doc.LoadHtml("<html><body><pre>" + HtmlEntity.Entitize(text) + "</pre></body></html>");

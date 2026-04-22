@@ -32,13 +32,22 @@ public sealed class ParseRetryWorker : BackgroundService
             {
                 await RunOnceAsync(stoppingToken);
             }
-            catch (OperationCanceledException) { break; }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "ParseRetryWorker iteration failed");
             }
-            try { await Task.Delay(Interval, stoppingToken); }
-            catch (OperationCanceledException) { break; }
+            try
+            {
+                await Task.Delay(Interval, stoppingToken);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
         }
     }
 
@@ -56,7 +65,11 @@ public sealed class ParseRetryWorker : BackgroundService
             {
                 using var stream = new MemoryStream(email.RawMimeBytes, writable: false);
                 var result = await pipeline.IngestAsync(stream, ct);
-                _logger.LogInformation("Retry for raw email id={Id} -> {Outcome}", email.Id, result.Outcome);
+                _logger.LogInformation(
+                    "Retry for raw email id={Id} -> {Outcome}",
+                    email.Id,
+                    result.Outcome
+                );
             }
             catch (Exception ex)
             {

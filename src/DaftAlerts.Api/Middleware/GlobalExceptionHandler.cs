@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
@@ -11,10 +12,14 @@ namespace DaftAlerts.Api.Middleware;
 public sealed class GlobalExceptionHandler : IExceptionHandler
 {
     private readonly ILogger<GlobalExceptionHandler> _logger;
+
     public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) => _logger = logger;
 
     public async ValueTask<bool> TryHandleAsync(
-        HttpContext httpContext, Exception exception, System.Threading.CancellationToken cancellationToken)
+        HttpContext httpContext,
+        Exception exception,
+        System.Threading.CancellationToken cancellationToken
+    )
     {
         var problem = exception switch
         {
@@ -24,21 +29,21 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
                 Type = "about:blank",
                 Title = "Bad request",
                 Status = StatusCodes.Status400BadRequest,
-                Detail = ae.Message
+                Detail = ae.Message,
             },
             KeyNotFoundException => new ProblemDetails
             {
                 Type = "about:blank",
                 Title = "Not found",
-                Status = StatusCodes.Status404NotFound
+                Status = StatusCodes.Status404NotFound,
             },
             _ => new ProblemDetails
             {
                 Type = "about:blank",
                 Title = "Unexpected error",
                 Status = StatusCodes.Status500InternalServerError,
-                Detail = "An unexpected error occurred."
-            }
+                Detail = "An unexpected error occurred.",
+            },
         };
 
         if (problem.Status >= 500)
@@ -60,7 +65,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
         {
             Type = "about:blank",
             Title = "Validation failed",
-            Status = StatusCodes.Status400BadRequest
+            Status = StatusCodes.Status400BadRequest,
         };
         foreach (var f in ve.Errors)
         {

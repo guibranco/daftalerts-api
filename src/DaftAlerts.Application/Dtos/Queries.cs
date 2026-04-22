@@ -20,24 +20,26 @@ public sealed record PropertyQuery(
     IReadOnlyList<string>? PropertyTypes,
     string? BerMin,
     PropertySortField SortBy,
-    SortDirection SortDir);
+    SortDirection SortDir
+);
 
 public enum PropertySortField
 {
     ReceivedAt,
     Price,
-    Beds
+    Beds,
 }
 
 public enum SortDirection
 {
     Asc,
-    Desc
+    Desc,
 }
 
 public sealed record UpdatePropertyDto(string? Status, string? Notes);
 
 public sealed record BulkActionDto(IReadOnlyList<Guid> Ids, string Action);
+
 public sealed record BulkActionResultDto(int Updated);
 
 public sealed record StatsDto(
@@ -45,4 +47,5 @@ public sealed record StatsDto(
     int ApprovedCount,
     int RecycledCount,
     decimal AvgApprovedPrice,
-    decimal MedianApprovedPrice);
+    decimal MedianApprovedPrice
+);

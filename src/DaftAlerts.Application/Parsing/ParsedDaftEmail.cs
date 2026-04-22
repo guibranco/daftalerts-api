@@ -19,4 +19,5 @@ public sealed record ParsedDaftEmail(
     string? MainImageUrl,
     DateTime ReceivedAt,
     string RawSubject,
-    string? MessageId);
+    string? MessageId
+);

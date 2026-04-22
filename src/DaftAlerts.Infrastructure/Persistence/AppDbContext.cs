@@ -4,7 +4,6 @@ using System.Data.Common;
 using System.Linq;
 using System.Text.Json;
 using DaftAlerts.Domain.Entities;
-using DaftAlerts.Domain.Enums;
 using DaftAlerts.Domain.ValueObjects;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -21,9 +20,8 @@ public sealed class AppDbContext : DbContext
     public DbSet<RawEmail> RawEmails => Set<RawEmail>();
     public DbSet<GeocodeCache> GeocodeCaches => Set<GeocodeCache>();
 
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
-    {
-    }
+    public AppDbContext(DbContextOptions<AppDbContext> options)
+        : base(options) { }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -33,7 +31,11 @@ public sealed class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder b)
     {
         // Map the berrank(...) scalar function so LINQ calls to SqliteFunctions.BerRank translate to SQL.
-        b.HasDbFunction(typeof(Repositories.SqliteFunctions).GetMethod(nameof(Repositories.SqliteFunctions.BerRank))!)
+        b.HasDbFunction(
+                typeof(Repositories.SqliteFunctions).GetMethod(
+                    nameof(Repositories.SqliteFunctions.BerRank)
+                )!
+            )
             .HasName("berrank");
 
         ConfigureProperty(b.Entity<Property>());
@@ -42,7 +44,9 @@ public sealed class AppDbContext : DbContext
         ConfigureGeocodeCache(b.Entity<GeocodeCache>());
     }
 
-    private static void ConfigureProperty(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<Property> b)
+    private static void ConfigureProperty(
+        Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<Property> b
+    )
     {
         b.ToTable("Properties");
         b.HasKey(p => p.Id);
@@ -73,7 +77,9 @@ public sealed class AppDbContext : DbContext
         b.HasIndex(p => new { p.Status, p.ReceivedAt }).IsDescending(false, true);
     }
 
-    private static void ConfigureFilterPreset(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<FilterPreset> b)
+    private static void ConfigureFilterPreset(
+        Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<FilterPreset> b
+    )
     {
         b.ToTable("FilterPresets");
         b.HasKey(f => f.Id);
@@ -82,12 +88,16 @@ public sealed class AppDbContext : DbContext
 
         var stringListConverter = new ValueConverter<IReadOnlyList<string>, string>(
             v => JsonSerializer.Serialize(v, JsonContext.Options),
-            v => JsonSerializer.Deserialize<IReadOnlyList<string>>(v, JsonContext.Options) ?? Array.Empty<string>());
+            v =>
+                JsonSerializer.Deserialize<IReadOnlyList<string>>(v, JsonContext.Options)
+                ?? Array.Empty<string>()
+        );
 
         var stringListComparer = new ValueComparer<IReadOnlyList<string>>(
             (a, c) => (a ?? Array.Empty<string>()).SequenceEqual(c ?? Array.Empty<string>()),
-            v => v == null ? 0 : v.Aggregate(0, (h, s) => HashCode.Combine(h, s)),
-            v => v == null ? Array.Empty<string>() : v.ToArray());
+            v => v.Aggregate(0, (h, s) => HashCode.Combine(h, s)),
+            v => v.ToArray()
+        );
 
         b.Property(f => f.RoutingKeys)
             .HasColumnName("RoutingKeysJson")
@@ -104,7 +114,9 @@ public sealed class AppDbContext : DbContext
         b.Property(f => f.BerMin).HasMaxLength(8);
     }
 
-    private static void ConfigureRawEmail(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<RawEmail> b)
+    private static void ConfigureRawEmail(
+        Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<RawEmail> b
+    )
     {
         b.ToTable("RawEmails");
         b.HasKey(r => r.Id);
@@ -117,7 +129,9 @@ public sealed class AppDbContext : DbContext
         b.HasIndex(r => r.ReceivedAt);
     }
 
-    private static void ConfigureGeocodeCache(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<GeocodeCache> b)
+    private static void ConfigureGeocodeCache(
+        Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<GeocodeCache> b
+    )
     {
         b.ToTable("GeocodeCache");
         b.HasKey(g => g.Key);
@@ -132,7 +146,7 @@ file static class JsonContext
     public static readonly JsonSerializerOptions Options = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = false
+        WriteIndented = false,
     };
 }
 
@@ -150,7 +164,8 @@ internal sealed class SqliteScalarFunctionInterceptor : DbConnectionInterceptor
     public override System.Threading.Tasks.Task ConnectionOpenedAsync(
         DbConnection connection,
         ConnectionEndEventData eventData,
-        System.Threading.CancellationToken cancellationToken = default)
+        System.Threading.CancellationToken cancellationToken = default
+    )
     {
         RegisterFunctions(connection);
         return System.Threading.Tasks.Task.CompletedTask;
@@ -158,11 +173,13 @@ internal sealed class SqliteScalarFunctionInterceptor : DbConnectionInterceptor
 
     private static void RegisterFunctions(DbConnection connection)
     {
-        if (connection is not SqliteConnection sqlite) return;
+        if (connection is not SqliteConnection sqlite)
+            return;
 
-        sqlite.CreateFunction<string?, int>(
+        sqlite.CreateFunction(
             name: "berrank",
             function: (string? ber) => BerRank.Rank(ber),
-            isDeterministic: true);
+            isDeterministic: true
+        );
     }
 }

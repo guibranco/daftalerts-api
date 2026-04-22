@@ -64,10 +64,8 @@ jobs:
       - name: Test with coverage
         run: |
           dotnet test DaftAlerts.sln \
-            --configuration Release \
-            --no-build \
-            --logger trx \
-            --results-directory TestResults \
+            --configuration Release --no-build \
+            --logger trx --results-directory TestResults \
             --collect:"XPlat Code Coverage" \
             -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
 

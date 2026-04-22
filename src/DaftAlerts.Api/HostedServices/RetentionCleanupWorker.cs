@@ -21,7 +21,8 @@ public sealed class RetentionCleanupWorker : BackgroundService
     public RetentionCleanupWorker(
         IServiceScopeFactory scopeFactory,
         IOptionsMonitor<RetentionOptions> options,
-        ILogger<RetentionCleanupWorker> logger)
+        ILogger<RetentionCleanupWorker> logger
+    )
     {
         _scopeFactory = scopeFactory;
         _options = options;
@@ -33,14 +34,23 @@ public sealed class RetentionCleanupWorker : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
             var delay = ComputeDelayUntilNextRun(DateTime.UtcNow);
-            try { await Task.Delay(delay, stoppingToken); }
-            catch (OperationCanceledException) { break; }
+            try
+            {
+                await Task.Delay(delay, stoppingToken);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
 
             try
             {
                 await RunOnceAsync(stoppingToken);
             }
-            catch (OperationCanceledException) { break; }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "RetentionCleanupWorker iteration failed");
@@ -62,6 +72,10 @@ public sealed class RetentionCleanupWorker : BackgroundService
         var days = Math.Max(1, _options.CurrentValue.RawEmailDays);
         var threshold = DateTime.UtcNow.AddDays(-days);
         var deleted = await rawEmails.DeleteOlderThanAsync(threshold, ct);
-        _logger.LogInformation("RetentionCleanupWorker deleted {Deleted} raw emails older than {Days}d", deleted, days);
+        _logger.LogInformation(
+            "RetentionCleanupWorker deleted {Deleted} raw emails older than {Days}d",
+            deleted,
+            days
+        );
     }
 }

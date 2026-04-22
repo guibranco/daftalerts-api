@@ -31,10 +31,10 @@ public sealed partial class DaftEmailParser : IDaftEmailParser
     [GeneratedRegex(@"€\s*([\d,]+(?:\.\d{2})?)\s*per\s*month", RegexOptions.IgnoreCase, "en-IE")]
     private static partial Regex PriceRegex();
 
-    [GeneratedRegex(@"(\d+)\s*Bed\b", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"\b(\d+)\s*Beds?\b", RegexOptions.IgnoreCase)]
     private static partial Regex BedsRegex();
 
-    [GeneratedRegex(@"(\d+)\s*Bath\b", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"\b(\d+)\s*Baths?\b", RegexOptions.IgnoreCase)]
     private static partial Regex BathsRegex();
 
     [GeneratedRegex(@"/ber/([A-G]\d?|Exempt)\.png", RegexOptions.IgnoreCase)]
@@ -45,11 +45,21 @@ public sealed partial class DaftEmailParser : IDaftEmailParser
 
     // --- Entry point --------------------------------------------------------
 
-    public ParsedDaftEmail? Parse(string htmlBody, string subject, DateTime receivedAt, string? messageId)
+    public ParsedDaftEmail? Parse(
+        string htmlBody,
+        string? subject,
+        DateTime receivedAt,
+        string? messageId
+    )
     {
+        subject ??= string.Empty;
+
         if (string.IsNullOrWhiteSpace(htmlBody))
         {
-            _logger.LogWarning("Daft email parse failed: empty HTML body (subject={Subject})", subject);
+            _logger.LogWarning(
+                "Daft email parse failed: empty HTML body (subject={Subject})",
+                subject
+            );
             return null;
         }
 
@@ -60,7 +70,10 @@ public sealed partial class DaftEmailParser : IDaftEmailParser
         var (daftUrl, daftId) = ExtractListingUrlAndId(doc);
         if (string.IsNullOrWhiteSpace(daftUrl) || string.IsNullOrWhiteSpace(daftId))
         {
-            _logger.LogWarning("Daft email parse failed: no listing URL found (subject={Subject})", subject);
+            _logger.LogWarning(
+                "Daft email parse failed: no listing URL found (subject={Subject})",
+                subject
+            );
             return null;
         }
 
@@ -73,8 +86,11 @@ public sealed partial class DaftEmailParser : IDaftEmailParser
         var price = ExtractPrice(subject, htmlBody);
 
         // --- Body-derived fields -------------------------------------------
-        var beds = ExtractFirstInt(doc.DocumentNode.InnerText, BedsRegex());
-        var baths = ExtractFirstInt(doc.DocumentNode.InnerText, BathsRegex());
+        // Use tag-stripped text so adjacent <p> elements don't bleed into each other
+        // (e.g. "<p>1 Bed</p><p>1 Bath</p>" becomes "1 Bed  1 Bath " preserving word boundaries).
+        var bodyTextSpaced = Regex.Replace(doc.DocumentNode.InnerHtml, @"<[^>]+>", " ");
+        var beds = ExtractFirstInt(bodyTextSpaced, BedsRegex());
+        var baths = ExtractFirstInt(bodyTextSpaced, BathsRegex());
 
         var berRating = ExtractBer(doc);
         var mainImageUrl = ExtractMainImage(doc);
@@ -86,8 +102,8 @@ public sealed partial class DaftEmailParser : IDaftEmailParser
         }
 
         return new ParsedDaftEmail(
-            DaftId: daftId!,
-            DaftUrl: daftUrl!,
+            DaftId: daftId,
+            DaftUrl: daftUrl,
             Address: address,
             Eircode: eircode,
             RoutingKey: routingKey,
@@ -98,8 +114,9 @@ public sealed partial class DaftEmailParser : IDaftEmailParser
             BerRating: berRating,
             MainImageUrl: mainImageUrl,
             ReceivedAt: receivedAt.ToUniversalTime(),
-            RawSubject: subject ?? string.Empty,
-            MessageId: messageId);
+            RawSubject: subject,
+            MessageId: messageId
+        );
     }
 
     // --- Extraction helpers -------------------------------------------------
@@ -112,12 +129,13 @@ public sealed partial class DaftEmailParser : IDaftEmailParser
             var candidates = new[]
             {
                 a.GetAttributeValue("originalsrc", null),
-                a.GetAttributeValue("href", null)
+                a.GetAttributeValue("href", null),
             };
 
             foreach (var raw in candidates)
             {
-                if (string.IsNullOrWhiteSpace(raw)) continue;
+                if (string.IsNullOrWhiteSpace(raw))
+                    continue;
                 var unwrapped = UnwrapSafeLink(raw.Trim());
                 var m = DaftListingRegex().Match(unwrapped);
                 if (m.Success)
@@ -141,15 +159,18 @@ public sealed partial class DaftEmailParser : IDaftEmailParser
     /// </summary>
     internal static string UnwrapSafeLink(string url)
     {
-        if (string.IsNullOrWhiteSpace(url)) return url;
-        if (url.IndexOf("safelinks.protection.outlook.com", StringComparison.OrdinalIgnoreCase) < 0) return url;
+        if (string.IsNullOrWhiteSpace(url))
+            return url;
+        if (url.IndexOf("safelinks.protection.outlook.com", StringComparison.OrdinalIgnoreCase) < 0)
+            return url;
 
         try
         {
             var uri = new Uri(url);
             var query = HttpUtility.ParseQueryString(uri.Query);
             var inner = query.Get("url");
-            if (string.IsNullOrWhiteSpace(inner)) return url;
+            if (string.IsNullOrWhiteSpace(inner))
+                return url;
             return WebUtility.UrlDecode(inner);
         }
         catch (UriFormatException)
@@ -171,7 +192,8 @@ public sealed partial class DaftEmailParser : IDaftEmailParser
         {
             // Fallback: scan the full visible text for an Eircode; use the line containing it as the address.
             var eircodeFromBody = Eircode.Extract(doc.DocumentNode.InnerText);
-            if (eircodeFromBody is null) return (string.Empty, null);
+            if (eircodeFromBody is null)
+                return (string.Empty, null);
 
             var line = FindLineContaining(doc.DocumentNode.InnerText, eircodeFromBody.Value.Value);
             return (line?.Trim() ?? string.Empty, eircodeFromBody.Value.Value);
@@ -197,9 +219,17 @@ public sealed partial class DaftEmailParser : IDaftEmailParser
         foreach (var source in new[] { subject ?? string.Empty, htmlBody })
         {
             var m = PriceRegex().Match(source);
-            if (!m.Success) continue;
+            if (!m.Success)
+                continue;
             var digits = m.Groups[1].Value.Replace(",", string.Empty, StringComparison.Ordinal);
-            if (decimal.TryParse(digits, NumberStyles.Number, CultureInfo.InvariantCulture, out var value))
+            if (
+                decimal.TryParse(
+                    digits,
+                    NumberStyles.Number,
+                    CultureInfo.InvariantCulture,
+                    out var value
+                )
+            )
                 return value;
         }
         return 0m;
@@ -239,12 +269,13 @@ public sealed partial class DaftEmailParser : IDaftEmailParser
         foreach (var img in doc.DocumentNode.SelectNodes("//img") ?? Enumerable.Empty<HtmlNode>())
         {
             var src = img.GetAttributeValue("src", null);
-            if (string.IsNullOrWhiteSpace(src)) continue;
+            if (string.IsNullOrWhiteSpace(src))
+                continue;
             var m = BerRegex().Match(src);
             if (m.Success)
             {
                 var val = m.Groups[1].Value;
-                return string.Equals(val, "Exempt", StringComparison.OrdinalIgnoreCase) ? "Exempt" : val.ToUpperInvariant();
+                return val.ToUpperInvariant();
             }
         }
         return null;
@@ -255,7 +286,8 @@ public sealed partial class DaftEmailParser : IDaftEmailParser
         foreach (var img in doc.DocumentNode.SelectNodes("//img") ?? Enumerable.Empty<HtmlNode>())
         {
             var src = img.GetAttributeValue("src", null);
-            if (string.IsNullOrWhiteSpace(src)) continue;
+            if (string.IsNullOrWhiteSpace(src))
+                continue;
             if (src.Contains("media.daft.ie", StringComparison.OrdinalIgnoreCase))
                 return src;
         }

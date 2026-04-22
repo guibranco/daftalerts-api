@@ -21,18 +21,23 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddDaftAlertsInfrastructure(
         this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration
+    )
     {
-        services.AddOptions<GeocodingOptions>()
+        services
+            .AddOptions<GeocodingOptions>()
             .Bind(configuration.GetSection(GeocodingOptions.SectionName));
-        services.AddOptions<RetentionOptions>()
+        services
+            .AddOptions<RetentionOptions>()
             .Bind(configuration.GetSection(RetentionOptions.SectionName));
-        services.AddOptions<DatabaseOptions>()
+        services
+            .AddOptions<DatabaseOptions>()
             .Bind(configuration.GetSection(DatabaseOptions.SectionName));
 
         services.AddSingleton<IClock, SystemClock>();
 
-        var connectionString = configuration.GetConnectionString("Default")
+        var connectionString =
+            configuration.GetConnectionString("Default")
             ?? "Data Source=./data/daftalerts.db;Cache=Shared;Foreign Keys=true";
 
         services.AddDbContext<AppDbContext>(options =>
@@ -57,14 +62,16 @@ public static class ServiceCollectionExtensions
 
     private static void AddGeocodingHttpClients(IServiceCollection services)
     {
-        services.AddHttpClient<GoogleGeocoder>(c =>
+        services
+            .AddHttpClient<GoogleGeocoder>(c =>
             {
                 c.Timeout = TimeSpan.FromSeconds(10);
             })
             .AddPolicyHandler(GetRetryPolicy())
             .AddPolicyHandler(GetTimeoutPolicy());
 
-        services.AddHttpClient<NominatimGeocoder>(c =>
+        services
+            .AddHttpClient<NominatimGeocoder>(c =>
             {
                 c.Timeout = TimeSpan.FromSeconds(10);
             })
