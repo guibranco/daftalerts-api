@@ -1,14 +1,14 @@
 # ======================================================================
 #  DaftAlerts documentation site — Jekyll + just-the-docs
 #  Lives at: /docs (in the daftalerts-api repo)
-#  Serves from: https://guibranco.github.io/daftalerts-api/
+#  Serves from: https://guilherme.stracini.com.br/daftalerts-api/
 # ======================================================================
 
 title: DaftAlerts
 description: Personal Daft.ie property aggregator — backend API and email ingestion.
 remote_theme: just-the-docs/just-the-docs@v0.12.0
 
-url: https://guibranco.github.io
+url: https://guilherme.stracini.com.br
 baseurl: /daftalerts-api
 
 # Favicon & logo (drop the files in docs/assets/images/)
@@ -69,7 +69,7 @@ enable_copy_code_button: true
 #  Footer
 # ----------------------------------------------------------------------
 footer_content: >-
-  &copy; 2026 Guilherme Branco Stracini.
+  &copy; 2026 <a href="https://guilherme.stracini.com.br">Guilherme Branco Stracini</a>.
   <a href="https://github.com/guibranco/daftalerts-api/blob/main/LICENSE">MIT license</a>.
   Built with <a href="https://just-the-docs.com">Just the Docs</a>.
 
@@ -125,23 +125,7 @@ exclude:
   - .sass-cache/
   - .jekyll-cache/
   - script/
-
-# Include dotfiles that just-the-docs needs
-include:
-  - _pages
-
-# ----------------------------------------------------------------------
-#  Collections (optional — gives you grouped sidebar entries later)
-# ----------------------------------------------------------------------
-# collections:
-#   guides:
-#     output: true
-#     permalink: /guides/:path/
-#
-# just_the_docs:
-#   collections:
-#     guides:
-#       name: Guides
+  - SETUP.md
 
 # ----------------------------------------------------------------------
 #  SEO defaults (picked up by jekyll-seo-tag)

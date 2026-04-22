@@ -1,8 +1,8 @@
 ---
-title: Api
+title: API reference
 nav_order: 5
 permalink: /api/
-description: "<short description>"
+description: "REST endpoint reference for DaftAlerts — authentication, filtering by routing key and price range, pagination, bulk operations, filter presets, and example requests and responses."
 ---
 
 # API reference

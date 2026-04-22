@@ -1,7 +1,8 @@
 ---
-title: Decisions,
-nav_order: 6, 
+title: Decisions
+nav_order: 6
 permalink: /decisions/
+description: "Architecture Decision Records — why SQLite over MariaDB, why Clean Architecture, why SMTP piping over IMAP polling, and the other structural choices with their trade-offs."
 ---
 
 # Architecture Decisions
