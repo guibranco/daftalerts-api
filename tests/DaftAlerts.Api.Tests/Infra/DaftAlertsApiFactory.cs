@@ -7,6 +7,7 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using DaftAlerts.Application.Abstractions;
+using DaftAlerts.Domain.ValueObjects;
 using DaftAlerts.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -28,6 +29,7 @@ public sealed class DaftAlertsApiFactory : WebApplicationFactory<Program>
     {
         _conn = new SqliteConnection("DataSource=:memory:");
         _conn.Open();
+        _conn.CreateFunction("berrank", (string? ber) => BerRank.Rank(ber), isDeterministic: true);
     }
 
     protected override IHost CreateHost(IHostBuilder builder)
@@ -59,7 +61,7 @@ public sealed class DaftAlertsApiFactory : WebApplicationFactory<Program>
                     {
                         ["ConnectionStrings:Default"] =
                             $"Data Source={testDbPath};Cache=Shared;Foreign Keys=true",
-                        ["Auth:ApiToken"] = "test-token",
+                        ["Auth:ApiToken"] = TestToken,
                         ["Geocoding:GoogleApiKey"] = "",
                     }
                 );
