@@ -1,5 +1,6 @@
 ---
 title: Architecture
+layout: default
 nav_order: 2
 permalink: /architecture/
 description: "Clean Architecture layers, project dependencies, data flow, and the three background workers that keep DaftAlerts running."
