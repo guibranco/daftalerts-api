@@ -208,14 +208,18 @@ public sealed class PropertiesEndpointTests : IClassFixture<DaftAlertsApiFactory
     [Fact]
     public async Task Bulk_recycle_updates_count()
     {
-        var client = _factory.CreateAuthedClient();
+        // Create dedicated inbox properties so this test doesn't affect the shared seed.
         using var db = _factory.CreateDbContext();
-        var ids = db
-            .Properties.Where(p => p.Status == PropertyStatus.Inbox)
-            .Select(p => p.Id)
-            .Take(2)
-            .ToList();
+        var toRecycle = new[]
+        {
+            NewProperty("bulk-1", "D09", PropertyStatus.Inbox, 1000, 1, null, "Apartment", DateTime.UtcNow.AddDays(-10)),
+            NewProperty("bulk-2", "D09", PropertyStatus.Inbox, 1000, 1, null, "Apartment", DateTime.UtcNow.AddDays(-11)),
+        };
+        db.Properties.AddRange(toRecycle);
+        db.SaveChanges();
+        var ids = toRecycle.Select(p => p.Id).ToList();
 
+        var client = _factory.CreateAuthedClient();
         var resp = await client.PostAsJsonAsync(
             "/api/properties/bulk",
             new BulkActionDto(ids, "recycle")

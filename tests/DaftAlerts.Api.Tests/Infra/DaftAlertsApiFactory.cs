@@ -7,7 +7,6 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using DaftAlerts.Application.Abstractions;
-using DaftAlerts.Domain.ValueObjects;
 using DaftAlerts.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -23,20 +22,25 @@ public sealed class DaftAlertsApiFactory : WebApplicationFactory<Program>
 {
     public const string TestToken = "test-token-abcdef";
 
-    private readonly SqliteConnection _conn;
+    // Named in-memory SQLite with shared cache so multiple EF Core connections share data
+    // while each gets its own SqliteConnection object (avoids concurrent CreateFunction crashes).
+    private readonly string _connString;
+    private readonly SqliteConnection _keeper;
 
     public DaftAlertsApiFactory()
     {
-        _conn = new SqliteConnection("DataSource=:memory:");
-        _conn.Open();
-        _conn.CreateFunction("berrank", (string? ber) => BerRank.Rank(ber), isDeterministic: true);
+        var dbName = $"testdb{Guid.NewGuid():N}";
+        _connString = $"Data Source=file:{dbName}?mode=memory&cache=shared";
+        // Keep one connection open so the named in-memory DB isn't dropped between EF Core scopes.
+        _keeper = new SqliteConnection(_connString);
+        _keeper.Open();
     }
 
     protected override IHost CreateHost(IHostBuilder builder)
     {
         var host = base.CreateHost(builder);
 
-        // Create schema on the shared connection once.
+        // Create schema once after the host (and DI container) is ready.
         using var scope = host.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         db.Database.EnsureCreated();
@@ -70,14 +74,14 @@ public sealed class DaftAlertsApiFactory : WebApplicationFactory<Program>
 
         builder.ConfigureServices(services =>
         {
-            // Remove the production DbContext registration and bind it to our shared in-memory SQLite connection.
+            // Replace the production DbContext with the shared in-memory named database.
             var descriptor = services.FirstOrDefault(d =>
                 d.ServiceType == typeof(DbContextOptions<AppDbContext>)
             );
             if (descriptor is not null)
                 services.Remove(descriptor);
 
-            services.AddDbContext<AppDbContext>(o => o.UseSqlite(_conn));
+            services.AddDbContext<AppDbContext>(o => o.UseSqlite(_connString));
 
             // Replace geocoding with a noop — we don't want network calls in tests.
             var geoDescriptor = services.FirstOrDefault(d =>
@@ -101,7 +105,9 @@ public sealed class DaftAlertsApiFactory : WebApplicationFactory<Program>
 
     public AppDbContext CreateDbContext()
     {
-        var options = new DbContextOptionsBuilder<AppDbContext>().UseSqlite(_conn).Options;
+        // Accessing Services forces the host to start, ensuring EnsureCreated() has run.
+        _ = Services;
+        var options = new DbContextOptionsBuilder<AppDbContext>().UseSqlite(_connString).Options;
         return new AppDbContext(options);
     }
 
@@ -109,13 +115,9 @@ public sealed class DaftAlertsApiFactory : WebApplicationFactory<Program>
     {
         base.Dispose(disposing);
         if (!disposing)
-        {
             return;
-        }
 
-        _conn.Dispose();
-        // Best-effort cleanup of temp db files
-
+        _keeper.Dispose();
         try
         {
             foreach (var file in Directory.GetFiles(Path.GetTempPath(), "daftalerts-test-*.db*"))
