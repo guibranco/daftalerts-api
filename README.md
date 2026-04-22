@@ -1,4 +1,4 @@
-# 📬 DaftAlerts — Documentation
+# DaftAlerts
 
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![Build](https://github.com/guibranco/daftalerts-api/actions/workflows/ci.yml/badge.svg)](https://github.com/guibranco/daftalerts-api/actions/workflows/ci.yml)
@@ -6,167 +6,124 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](../LICENSE)
 [![Container](https://img.shields.io/badge/ghcr.io-daftalerts--api-2496ED?logo=docker&logoColor=white)](https://github.com/guibranco/daftalerts-api/pkgs/container/daftalerts-api)
 
-> Your Daft.ie inbox, organized. A personal property-alert aggregator that ingests Daft.ie email alerts via SMTP piping, parses them into structured listings, and serves a filtered REST API backed by SQLite and Google Maps geocoding.
+Personal property-alert aggregator for [Daft.ie](https://www.daft.ie). Ingests Daft alert emails via SMTP piping, parses them into structured records, geocodes addresses, and exposes a REST API consumed by a separate React frontend.
 
----
+Single-tenant, built for one user: a senior software engineer in Dublin, Ireland, deploying to an Oracle Cloud Infrastructure (OCI) Ubuntu VPS.
 
-## 🗺️ Documentation map
-
-| Document | What's inside | Who it's for |
-| --- | --- | --- |
-| 📐 [ARCHITECTURE.md](./ARCHITECTURE.md) | Clean Architecture layers, project dependencies, data flow diagrams, background workers | Developers, new contributors |
-| 🚀 [DEPLOYMENT.md](./DEPLOYMENT.md) | Step-by-step OCI Ubuntu VPS setup — Postfix, systemd, Nginx, Let's Encrypt, Docker Compose | Operators, self-hosters |
-| 🔍 [PARSER.md](./PARSER.md) | How the Daft.ie email parser works, supported variants, adding new cases | Developers extending ingestion |
-| 🌐 [API.md](./API.md) | Full REST endpoint reference, auth, filters, pagination, examples | Frontend developers, API consumers |
-| 🧭 [DECISIONS.md](./DECISIONS.md) | Architecture Decision Records (ADRs) — why SQLite, why Clean Arch, why SMTP piping | Anyone wondering "why this way?" |
-
----
-
-## ⚡ Quickstart
-
-### Run locally (without Docker)
-
-```bash
-# 1. Clone
-git clone https://github.com/guibranco/daftalerts-api.git
-cd daftalerts-api
-
-# 2. Restore and build
-dotnet restore DaftAlerts.sln
-dotnet build DaftAlerts.sln --configuration Release
-
-# 3. Apply migrations (creates ./data/daftalerts.db)
-dotnet ef database update \
-  --project src/DaftAlerts.Infrastructure \
-  --startup-project src/DaftAlerts.Api
-
-# 4. Configure secrets (create appsettings.Development.json)
-cat > src/DaftAlerts.Api/appsettings.Development.json <<EOF
-{
-  "Auth": { "ApiToken": "dev-local-token" },
-  "Geocoding": { "GoogleApiKey": "YOUR_KEY_HERE" }
-}
-EOF
-
-# 5. Run
-dotnet run --project src/DaftAlerts.Api
-```
-
-The API listens on `http://localhost:5080`. Swagger/Scalar UI at `/scalar/v1` in Development.
-
-### Run with Docker
-
-```bash
-docker run -d \
-  --name daftalerts-api \
-  -p 5080:5080 \
-  -v daftalerts-data:/var/lib/daftalerts \
-  -e DaftAlerts__Auth__ApiToken=dev-local-token \
-  -e DaftAlerts__Geocoding__GoogleApiKey=YOUR_KEY_HERE \
-  ghcr.io/guibranco/daftalerts-api:latest
-```
-
-Full production deployment (Postfix + systemd + Nginx) is in [DEPLOYMENT.md](./DEPLOYMENT.md).
-
----
-
-## 🧱 Project layout
-
-```
-daftalerts-api/
-├── src/
-│   ├── DaftAlerts.Domain/          Entities, value objects
-│   ├── DaftAlerts.Application/     Use cases, DTOs, interfaces
-│   ├── DaftAlerts.Infrastructure/  EF Core, parsing, geocoding
-│   ├── DaftAlerts.Api/             Minimal API host
-│   └── DaftAlerts.EmailIngest/     SMTP-pipe console app
-├── tests/                          xUnit + FluentAssertions
-├── deploy/                         Postfix, systemd, install scripts
-├── docs/                           ← you are here
-├── Dockerfile
-└── DaftAlerts.sln
-```
-
-Detailed dependency rules and rationale live in [ARCHITECTURE.md](./ARCHITECTURE.md).
-
----
-
-## 🔄 Data flow at a glance
+## Architecture
 
 ```mermaid
 flowchart LR
-    A[📧 Daft.ie email] --> B[Postfix]
-    B -->|pipe to stdin| C[DaftAlerts.EmailIngest]
-    C --> D[(SQLite)]
-    D -.->|async| E[GeocodingWorker]
-    E -->|Google Maps API| F[lat/lng resolved]
-    F --> D
-    D --> G[DaftAlerts.Api]
-    G -->|REST + Bearer auth| H[🖥️ daftalerts-ui]
+    Daft[Daft.ie Alert Email] -->|MX| Postfix
+    Postfix -->|pipe stdin| Ingest[DaftAlerts.EmailIngest<br/>console app]
+    Ingest --> SQLite[(SQLite<br/>/var/lib/daftalerts)]
+    Api[DaftAlerts.Api<br/>ASP.NET Core] --> SQLite
+    subgraph Workers[Background workers]
+        direction TB
+        Geo[GeocodingWorker]
+        Retry[ParseRetryWorker]
+        Clean[RetentionCleanupWorker]
+    end
+    Api --- Workers
+    Workers --> SQLite
+    Geo -->|cached| Google[(Google Geocoding)]
+    Geo -->|fallback| Nominatim[(Nominatim / OSM)]
+    Frontend[React frontend<br/>consumes REST] -->|Bearer token| Nginx[nginx TLS]
+    Nginx --> Api
 ```
 
-For the full data-flow diagram and the three hosted services (`GeocodingWorker`, `RetentionCleanupWorker`, `ParseRetryWorker`), see [ARCHITECTURE.md](./ARCHITECTURE.md#background-workers).
+## Tech stack
 
----
+- .NET 10 / ASP.NET Core Minimal APIs
+- Entity Framework Core 10 + SQLite (file-based)
+- MimeKit + MailKit for email parsing
+- HtmlAgilityPack for HTML extraction
+- Polly for HTTP retries (Google + Nominatim geocoding)
+- Serilog structured logging (console + rolling file)
+- FluentValidation for request validation
+- Swashbuckle OpenAPI / Swagger UI (dev only)
+- xUnit, FluentAssertions, Testcontainers for tests
+- Clean Architecture across 5 source projects: Domain ← Application ← Infrastructure ← Api / EmailIngest
+- Single-file self-contained publish for EmailIngest (so Postfix can invoke a bare binary)
 
-## 🧪 Common tasks
+## Quick start (dev)
 
-| Task | Command |
-| --- | --- |
-| Run all tests | `dotnet test DaftAlerts.sln --configuration Release` |
-| Run with coverage | `dotnet test --collect:"XPlat Code Coverage"` |
-| Add a migration | `dotnet ef migrations add <Name> --project src/DaftAlerts.Infrastructure --startup-project src/DaftAlerts.Api` |
-| Publish EmailIngest binary | `dotnet publish src/DaftAlerts.EmailIngest -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true` |
-| Build Docker image locally | `docker build -t daftalerts-api:dev .` |
-| View API docs (dev only) | Open `http://localhost:5080/scalar/v1` |
-| Replay a failed email | See [PARSER.md § ParseRetryWorker](./PARSER.md#parse-retry) |
+```sh
+# Requires .NET 10 SDK
+dotnet restore
+dotnet build
 
----
+# Run API on http://localhost:5080
+dotnet run --project src/DaftAlerts.Api
 
-## 🔐 Security & operations
+# Run all tests
+dotnet test
+```
 
-- **Auth** — single static bearer token via `Auth:ApiToken` (see [DEPLOYMENT.md § Secrets](./DEPLOYMENT.md#secrets))
-- **Rate limiting** — 300 req/min per IP on `/api/*`
-- **HTTPS** — enforced in production via Nginx + Let's Encrypt
-- **Retention** — raw emails deleted after 90 days (`Retention:RawEmailDays`)
-- **Backups** — SQLite file at `/var/lib/daftalerts/daftalerts.db`; see [DEPLOYMENT.md § Backups](./DEPLOYMENT.md#backups) for cron-based snapshot strategy
+Set `Auth:ApiToken` in `appsettings.Development.json` (or `DaftAlerts__Auth__ApiToken` env var) to a value of your choosing. Swagger UI is available at `/swagger` in development.
 
-Report security issues privately — see [SECURITY.md](../SECURITY.md) at the repo root.
+Pipe a sample alert email into the ingest pipeline:
 
----
+```sh
+cat tests/DaftAlerts.Infrastructure.Tests/TestData/sample-daft-herbert-lane.eml \
+    | dotnet run --project src/DaftAlerts.EmailIngest
+```
 
-## 🔗 Related repositories
+## Environment variables (production)
 
-| Repo | Description |
-| --- | --- |
-| [guibranco/daftalerts-api](https://github.com/guibranco/daftalerts-api) | This repository — backend API and email ingestion |
-| [guibranco/daftalerts-ui](https://github.com/guibranco/daftalerts-ui) | React + Vite + TypeScript frontend that consumes this API |
+| Key | Purpose |
+|---|---|
+| `DaftAlerts__Auth__ApiToken` | Bearer token required for `/api/*` calls |
+| `DaftAlerts__Geocoding__GoogleApiKey` | Google Geocoding API key (optional; Nominatim used as fallback) |
+| `DaftAlerts__Cors__AllowedOrigins__0` | Frontend origin, e.g. `https://daftalerts.example.com` |
+| `DaftAlerts__ConnectionStrings__Default` | SQLite connection string |
+| `DaftAlerts__Database__AutoMigrate` | `true` to apply migrations on startup |
+| `DaftAlerts__Retention__RawEmailDays` | Days to retain raw MIME bytes (default 90) |
 
----
+## REST API summary
 
-## 🆘 Troubleshooting
+All endpoints except `/health*` and (in dev) `/swagger*` require `Authorization: Bearer <token>`.
 
-| Symptom | Likely cause | Where to look |
-| --- | --- | --- |
-| `unable to open database file` | Missing parent directory | [DEPLOYMENT.md § Database path](./DEPLOYMENT.md#database-path) |
-| Emails arrive but don't appear in API | Parser failed — check `RawEmail.ParseStatus` | [PARSER.md § Debugging](./PARSER.md#debugging) |
-| Properties missing lat/lng | Geocoding worker stalled or key invalid | [ARCHITECTURE.md § GeocodingWorker](./ARCHITECTURE.md#geocoding-worker) |
-| 401 on every API call | Missing or wrong `Authorization: Bearer` header | [API.md § Authentication](./API.md#authentication) |
-| Postfix pipe command fails silently | Permission or path issue on the ingest binary | [DEPLOYMENT.md § Postfix](./DEPLOYMENT.md#postfix) |
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/api/properties?status=inbox&...` | List properties with filters, sort, paging |
+| `GET` | `/api/properties/{id}` | Single property |
+| `PATCH` | `/api/properties/{id}` | Update status / notes |
+| `POST` | `/api/properties/bulk` | Bulk `approve` / `recycle` / `restore` |
+| `GET` | `/api/stats` | Counts + avg/median approved price |
+| `GET` | `/api/presets` | List filter presets |
+| `POST` | `/api/presets` | Create filter preset |
+| `PUT` | `/api/presets/{id}` | Update filter preset |
+| `DELETE` | `/api/presets/{id}` | Delete filter preset |
+| `GET` | `/health` | Liveness |
+| `GET` | `/health/ready` | Readiness: DB + geocoding worker |
 
----
+See [docs/API.md](docs/API.md) for full request/response examples or run the API in development mode and browse `/swagger`.
 
-## 🤝 Contributing
+## Project layout
 
-This is a personal tool, but if you're forking it and want to upstream something useful:
+```
+src/
+  DaftAlerts.Domain/          Entities, value objects — no deps
+  DaftAlerts.Application/     Use cases, DTOs, interfaces, validators
+  DaftAlerts.Infrastructure/  EF Core, parser, geocoders, ingestion pipeline
+  DaftAlerts.Api/             Minimal API host + hosted workers
+  DaftAlerts.EmailIngest/     Console app invoked by Postfix
+tests/
+  *.Tests/                    Parallel test projects per source project
+```
 
-1. Open an issue first to discuss scope.
-2. Keep changes focused — one concern per PR.
-3. All tests must pass and coverage must not drop below 80%.
-4. Follow the conventions in [ARCHITECTURE.md § Coding conventions](./ARCHITECTURE.md#coding-conventions).
+Dependency rule is enforced by project references — no upward references allowed.
 
----
+## Docs
 
-## 📜 License
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — layer explanations, domain model, flow
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — step-by-step Ubuntu VPS deploy
+- [docs/PARSER.md](docs/PARSER.md) — how the Daft email parser works; how to add variants
+- [docs/API.md](docs/API.md) — endpoint reference
+- [docs/DECISIONS.md](docs/DECISIONS.md) — ADRs for non-obvious design choices
+- [deploy/postfix-setup.md](deploy/postfix-setup.md) — Postfix alias wiring
 
-MIT — see [LICENSE](../LICENSE).
+## License
+
+MIT — see [LICENSE](LICENSE).
