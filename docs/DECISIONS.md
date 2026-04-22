@@ -1,3 +1,9 @@
+---
+title: Decisions,
+nav_order: 6, 
+permalink: /decisions/
+---
+
 # Architecture Decisions
 
 Short, informal ADRs for choices that aren't self-evident from the code.

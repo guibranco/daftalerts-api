@@ -1,3 +1,9 @@
+---
+title: Deployment
+nav_order: 3
+permalink: /deployment/
+---
+
 # Deployment
 
 Target: Ubuntu 24.04 LTS on an OCI VPS. Two viable deployment modes — pick one:
