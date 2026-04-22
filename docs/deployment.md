@@ -1,5 +1,6 @@
 ---
 title: Deployment
+layout: default
 nav_order: 3
 permalink: /deployment/
 description: "Step-by-step production setup on an Oracle Cloud Ubuntu VPS — Postfix SMTP piping, systemd service, Nginx reverse proxy, Let's Encrypt certificates, and Docker Compose."
