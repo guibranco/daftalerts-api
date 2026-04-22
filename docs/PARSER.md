@@ -2,6 +2,7 @@
 title: Parser
 nav_order: 4
 permalink: /parser/
+description: "How the Daft.ie email parser works — extracting Eircode, price, beds/baths, BER rating, and images from HTML emails, including Outlook SafeLinks unwrapping and how to add new variants."
 ---
 
 # Daft.ie email parser

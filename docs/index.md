@@ -2,8 +2,8 @@
 title: Home
 layout: home
 nav_order: 1
-description: "DaftAlerts — personal Daft.ie property aggregator. Backend API and email ingestion."
 permalink: /
+description: "DaftAlerts — a personal .NET 10 application that ingests Daft.ie property alert emails via SMTP, parses them into structured listings, geocodes them via Google Maps, and serves a filtered REST API to a React frontend."
 ---
 
 # 📬 DaftAlerts
@@ -22,9 +22,9 @@ Your Daft.ie inbox, organized.
 DaftAlerts is a personal web application that ingests property alert emails
 forwarded from [Daft.ie](https://www.daft.ie), parses them into structured
 listings, geocodes each property via Google Maps, and serves a filtered REST
-API to a separately-built React frontend. Built for a single user (me), it
-runs on an Oracle Cloud Infrastructure Ubuntu VPS, receives mail via Postfix
-SMTP piping, and stores everything in SQLite.
+API to a separately-built React frontend. Built for a single user, it runs
+on an Oracle Cloud Infrastructure Ubuntu VPS, receives mail via Postfix SMTP
+piping, and stores everything in SQLite.
 
 The stack:
 
@@ -43,11 +43,11 @@ The stack:
 
 | Document | What's inside |
 |:---|:---|
-| [📐 Architecture]({{ '/architecture/' | relative_url }})     | Clean Architecture layers, data flow, background workers |
-| [🚀 Deployment]({{ '/deployment/' | relative_url }})         | OCI Ubuntu VPS setup — Postfix, systemd, Nginx, Let's Encrypt |
-| [🔍 Parser]({{ '/parser/' | relative_url }})                 | How the Daft.ie email parser works, supported variants |
-| [🌐 API reference]({{ '/api/' | relative_url }})             | REST endpoints, auth, filters, pagination, examples |
-| [🧭 Decisions]({{ '/decisions/' | relative_url }})           | Architecture Decision Records (ADRs) |
+| [📐 Architecture]({{ '/architecture/' | relative_url }})     | Clean Architecture layers, project dependencies, data flow, and the three background workers that keep DaftAlerts running. |
+| [🚀 Deployment]({{ '/deployment/' | relative_url }})         | Step-by-step production setup on an Oracle Cloud Ubuntu VPS — Postfix SMTP piping, systemd, Nginx, Let's Encrypt, and Docker Compose. |
+| [🔍 Parser]({{ '/parser/' | relative_url }})                 | How the Daft.ie email parser works, including Outlook SafeLinks unwrapping and how to add new variants. |
+| [🌐 API reference]({{ '/api/' | relative_url }})             | REST endpoint reference — authentication, filtering, pagination, bulk operations, and example requests. |
+| [🧭 Decisions]({{ '/decisions/' | relative_url }})           | Architecture Decision Records with the trade-offs behind each major choice. |
 
 </div>
 
