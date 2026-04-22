@@ -38,7 +38,7 @@ back_to_top_text: "Back to top"
 
 # External links shown in the top-right of every page
 aux_links:
-  "GitHub repo":
+  "GitHub":
     - "https://github.com/guibranco/daftalerts-api"
   "Frontend (daftalerts-ui)":
     - "https://github.com/guibranco/daftalerts-ui"
