@@ -11,7 +11,7 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.0" />
     <!-- ASP.NET Core / hosting -->
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
-    <PackageVersion Include="Scalar.AspNetCore" Version="2.14.2" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.14.6" />
     <!-- Microsoft.Extensions.* -->
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.7" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.7" />
@@ -52,12 +52,12 @@
     <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.6" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <!-- Email parsing -->
-    <PackageVersion Include="MimeKit" Version="4.15.1" />
+    <PackageVersion Include="MimeKit" Version="4.16.0" />
     <PackageVersion Include="MailKit" Version="4.15.1" />
     <!-- HTML parsing -->
-    <PackageVersion Include="HtmlAgilityPack" Version="1.11.72" />
+    <PackageVersion Include="HtmlAgilityPack" Version="1.12.4" />
     <!-- HTTP resilience -->
-    <PackageVersion Include="Polly" Version="8.5.0" />
+    <PackageVersion Include="Polly" Version="8.6.6" />
     <PackageVersion Include="Polly.Extensions.Http" Version="3.0.0" />
     <!-- Rate limiting -->
     <PackageVersion Include="AspNetCoreRateLimit" Version="5.0.0" />
