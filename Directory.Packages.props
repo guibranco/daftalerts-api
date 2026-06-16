@@ -10,7 +10,7 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.0" />
     <!-- ASP.NET Core / hosting -->
-    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
     <PackageVersion Include="Scalar.AspNetCore" Version="2.14.2" />
     <!-- Microsoft.Extensions.* -->
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.8" />
