@@ -128,8 +128,8 @@ public sealed partial class DaftEmailParser : IDaftEmailParser
         {
             var candidates = new[]
             {
-                a.GetAttributeValue("originalsrc", null),
-                a.GetAttributeValue("href", null),
+                a.GetAttributeValue("originalsrc", ""),
+                a.GetAttributeValue("href", ""),
             };
 
             foreach (var raw in candidates)
@@ -268,7 +268,7 @@ public sealed partial class DaftEmailParser : IDaftEmailParser
     {
         foreach (var img in doc.DocumentNode.SelectNodes("//img") ?? Enumerable.Empty<HtmlNode>())
         {
-            var src = img.GetAttributeValue("src", null);
+            var src = img.GetAttributeValue("src", "");
             if (string.IsNullOrWhiteSpace(src))
                 continue;
             var m = BerRegex().Match(src);
@@ -285,7 +285,7 @@ public sealed partial class DaftEmailParser : IDaftEmailParser
     {
         foreach (var img in doc.DocumentNode.SelectNodes("//img") ?? Enumerable.Empty<HtmlNode>())
         {
-            var src = img.GetAttributeValue("src", null);
+            var src = img.GetAttributeValue("src", "");
             if (string.IsNullOrWhiteSpace(src))
                 continue;
             if (src.Contains("media.daft.ie", StringComparison.OrdinalIgnoreCase))
