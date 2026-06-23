@@ -212,8 +212,26 @@ public sealed class PropertiesEndpointTests : IClassFixture<DaftAlertsApiFactory
         using var db = _factory.CreateDbContext();
         var toRecycle = new[]
         {
-            NewProperty("bulk-1", "D09", PropertyStatus.Inbox, 1000, 1, null, "Apartment", DateTime.UtcNow.AddDays(-10)),
-            NewProperty("bulk-2", "D09", PropertyStatus.Inbox, 1000, 1, null, "Apartment", DateTime.UtcNow.AddDays(-11)),
+            NewProperty(
+                "bulk-1",
+                "D09",
+                PropertyStatus.Inbox,
+                1000,
+                1,
+                null,
+                "Apartment",
+                DateTime.UtcNow.AddDays(-10)
+            ),
+            NewProperty(
+                "bulk-2",
+                "D09",
+                PropertyStatus.Inbox,
+                1000,
+                1,
+                null,
+                "Apartment",
+                DateTime.UtcNow.AddDays(-11)
+            ),
         };
         db.Properties.AddRange(toRecycle);
         db.SaveChanges();
