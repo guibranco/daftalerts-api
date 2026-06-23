@@ -3,6 +3,11 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
+  <!-- SQLitePCLRaw.lib.e_sqlite3 2.1.11 (CVE-2025-6965 / GHSA-2m69-gcr7-jv3q) has no patched NuGet version yet.
+       It is a transitive dependency of Microsoft.EntityFrameworkCore.Sqlite. Suppress until upstream releases a fix. -->
+  <ItemGroup>
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-2m69-gcr7-jv3q" />
+  </ItemGroup>
   <ItemGroup>
     <!-- EF Core 10 -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.9" />
