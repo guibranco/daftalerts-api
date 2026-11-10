@@ -18,7 +18,7 @@
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.11" />
     <!-- Pin transitive Microsoft.OpenApi to patched version (GHSA-v5pm-xwqc-g5wc) -->
     <PackageVersion Include="Microsoft.OpenApi" Version="2.7.5" />
-    <PackageVersion Include="Scalar.AspNetCore" Version="2.18.7" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.19.0" />
     <!-- Microsoft.Extensions.* -->
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.14" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.14" />
@@ -64,7 +64,7 @@
     <!-- HTML parsing -->
     <PackageVersion Include="HtmlAgilityPack" Version="1.13.1" />
     <!-- HTTP resilience -->
-    <PackageVersion Include="Polly" Version="8.9.0" />
+    <PackageVersion Include="Polly" Version="8.9.1" />
     <PackageVersion Include="Polly.Extensions.Http" Version="3.0.0" />
     <!-- Rate limiting -->
     <PackageVersion Include="AspNetCoreRateLimit" Version="5.0.0" />
