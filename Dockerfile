@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 
 # ---- build ---------------------------------------------------------------
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 WORKDIR /src
 
 # Version info supplied by CI (GitVersion). Defaults keep local builds working.
@@ -44,7 +44,7 @@ RUN dotnet publish src/DaftAlerts.EmailIngest/DaftAlerts.EmailIngest.csproj \
     --no-restore
 
 # ---- runtime -------------------------------------------------------------
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:11.0 AS runtime
 
 # Re-declare ARGs needed for LABEL values (ARGs don't cross stage boundaries).
 ARG VERSION=0.0.0
