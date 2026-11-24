@@ -34,19 +34,20 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v5.0.0
-        with:
-          versionSpec: '6.x'
-
-      - name: Determine version
-        id: gitversion
-        uses: gittools/actions/gitversion/execute@v5.0.0
-
+      # GitTools Actions v5 runs GitVersion 7, which needs the .NET 10 SDK installed first.
       - name: Setup .NET 10
         uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v5.0.0
+        with:
+          versionSpec: '7.0.x'
+
+      - name: Determine version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v5.0.0
 
       - name: Restore
         run: dotnet restore DaftAlerts.sln
